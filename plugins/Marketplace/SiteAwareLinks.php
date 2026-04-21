@@ -11,7 +11,6 @@ namespace Piwik\Plugins\Marketplace;
 
 use Piwik\Common;
 use Piwik\Exception\UnexpectedWebsiteFoundException;
-use Piwik\NoAccessException;
 use Piwik\Plugins\UsersManager\UserPreferences;
 use Piwik\Site;
 use Piwik\Url;
