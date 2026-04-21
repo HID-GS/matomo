@@ -81,8 +81,6 @@ class SiteAwareLinks
             return true;
         } catch (UnexpectedWebsiteFoundException $e) {
             return false;
-        } catch (NoAccessException $e) {
-            return false;
         }
     }
 }
