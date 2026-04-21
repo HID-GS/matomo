@@ -9,6 +9,10 @@
 
 namespace Piwik\Plugins\UsersManager;
 
+use Piwik\Access;
+use Piwik\Access\Role\Admin;
+use Piwik\Access\Role\View;
+use Piwik\Access\Role\Write;
 use Piwik\Request\AuthenticationToken;
 use Piwik\Common;
 use Piwik\Config\GeneralConfig;
@@ -198,6 +202,86 @@ class Model
         return $return;
     }
 
+    /**
+     * Validates a requested token access level against the user's maximum and returns the value to persist on the token.
+     *
+     * Returns the requested level when it is valid and not higher than the user's maximum. Returns the user's
+     * maximum (or null when `$defaultToMaximum` is false) when no level was requested. Throws when the level
+     * is unknown or exceeds the user's maximum.
+     *
+     * @param string      $userLogin        Login of the user the token belongs to.
+     * @param string|null $accessLevel      Requested access level, or null when no specific level was provided.
+     * @param bool        $defaultToMaximum Whether a null `$accessLevel` should fall back to the user's maximum
+     *                                      access level (true) or stay null to keep the token unscoped (false).
+     * @return string|null The validated access level, or null when no scope should be applied.
+     * @throws \Exception When the requested access level is invalid or higher than the user's maximum.
+     */
+    public function normalizeAndValidateTokenAccessLevelForUser(string $userLogin, ?string $accessLevel, bool $defaultToMaximum = true): ?string
+    {
+        $maxAccessLevel = $this->getMaxTokenAccessLevelForUser($userLogin);
+        if ($accessLevel === null) {
+            return $defaultToMaximum ? $maxAccessLevel : null;
+        }
+
+        $this->checkValidTokenAccessLevel($accessLevel);
+        $this->checkRequestedTokenAccessLevelIsAllowed($accessLevel, $maxAccessLevel);
+
+        return $accessLevel;
+    }
+
+    /**
+     * Returns the access levels a user is allowed to scope a new token to.
+     *
+     * The list contains every level at or below the user's maximum, ordered from least to most privileged.
+     *
+     * @param string $userLogin Login of the user the token belongs to.
+     * @return string[]
+     */
+    public function getAllowedTokenAccessLevelsForUser(string $userLogin): array
+    {
+        $rankings = $this->getTokenAccessLevelRanking();
+        $maxAccessLevel = $this->getMaxTokenAccessLevelForUser($userLogin);
+        $maxRanking = $rankings[$maxAccessLevel];
+
+        $result = [];
+        foreach (Access::getTokenAccessLevels() as $candidate) {
+            if ($rankings[$candidate] <= $maxRanking) {
+                $result[] = $candidate;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Returns the highest access level a user effectively has.
+     *
+     * Returns 'superuser' when the user has the superuser flag, otherwise the highest per-site role the user holds
+     * across all sites ('admin', 'write' or 'view').
+     *
+     * @param string $userLogin Login of the user.
+     * @return string One of 'superuser', 'admin', 'write' or 'view'.
+     */
+    public function getMaxTokenAccessLevelForUser(string $userLogin): string
+    {
+        $user = $this->getUser($userLogin);
+        if (!empty($user['superuser_access'])) {
+            return 'superuser';
+        }
+
+        $siteAccess = $this->getSitesAccessFromUser($userLogin);
+        $accessValues = array_column($siteAccess, 'access');
+        if (in_array(Admin::ID, $accessValues, true)) {
+            return Admin::ID;
+        }
+
+        if (in_array(Write::ID, $accessValues, true)) {
+            return Write::ID;
+        }
+
+        return View::ID;
+    }
+
     public function getSitesAccessFromUserWithFilters(
         $userLogin,
         $limit = null,
@@ -373,7 +457,8 @@ class Model
         $dateCreated,
         $dateExpired = null,
         $isSystemToken = false,
-        bool $secureOnly = false
+        bool $secureOnly = false,
+        ?string $accessLevel = null
     ) {
         if (!$this->getUser($login)) {
             throw new \Exception('User ' . $login . ' does not exist');
@@ -391,14 +476,14 @@ class Model
 
         $isSystemToken = (int)$isSystemToken;
 
-        $insertSql = "INSERT INTO " . $this->tokenTable . ' (login, description, password, date_created, date_expired, system_token, hash_algo, secure_only) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+        $insertSql = "INSERT INTO " . $this->tokenTable . ' (login, description, password, date_created, date_expired, system_token, hash_algo, secure_only, access_level) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
         $tokenAuth = $this->hashTokenAuth($tokenAuth);
 
         $db = $this->getDb();
         $db->query(
             $insertSql,
-            [$login, $description, $tokenAuth, $dateCreated, $dateExpired, $isSystemToken, self::TOKEN_HASH_ALGO, (int) $secureOnly]
+            [$login, $description, $tokenAuth, $dateCreated, $dateExpired, $isSystemToken, self::TOKEN_HASH_ALGO, (int) $secureOnly, $accessLevel]
         );
 
         return $db->lastInsertId();
@@ -548,6 +633,27 @@ class Model
         return array_column($tokens, 'password');
     }
 
+    public function getAllHashedTokensForTrackerCacheForLogins($logins)
+    {
+        if (empty($logins)) {
+            return array();
+        }
+
+        $db = $this->getDb();
+        $placeholder = Common::getSqlStringFieldsArray($logins);
+
+        $expired = $this->getQueryNotExpiredToken();
+        $bind = array_merge($logins, array(Write::ID, Admin::ID, 'superuser'), $expired['bind']);
+
+        $tokens = $db->fetchAll(
+            "SELECT password FROM " . $this->tokenTable . " WHERE `login` IN (" . $placeholder . ")"
+            . " and (`access_level` IS NULL OR `access_level` IN (?, ?, ?)) and " . $expired['sql'],
+            $bind
+        );
+
+        return array_column($tokens, 'password');
+    }
+
     public function deleteToken($idTokenAuth, $login)
     {
         $db = $this->getDb();
@@ -663,6 +769,59 @@ class Model
         }
 
         return null;
+    }
+
+    /**
+     * Returns metadata for a valid, unexpired auth token.
+     *
+     * The token transport security state (whether the token was supplied via a secure mechanism) is read from
+     * the active `AuthenticationToken` request scope, so secure-only tokens are correctly excluded for non-secure
+     * requests. Returns null when the token does not exist or is expired. The special 'anonymous' token returns a
+     * synthetic row with `access_level => null` when an anonymous user exists.
+     *
+     * @param string|null $tokenAuth The token to look up.
+     * @return array<string,mixed>|null Token row including at least `login` and `access_level`, or null when not found.
+     * @throws \Exception
+     */
+    public function getTokenMetadataByTokenAuth(
+        #[\SensitiveParameter]
+        ?string $tokenAuth
+    ): ?array {
+        if ($tokenAuth === 'anonymous') {
+            $row = $this->getUser('anonymous');
+            return !empty($row) ? ['login' => 'anonymous', 'access_level' => null] : null;
+        }
+
+        $authenticationToken = StaticContainer::get(AuthenticationToken::class);
+        $isTokenProvidedSecurely = $authenticationToken->wasTokenAuthProvidedSecurely();
+
+        if ($authenticationToken->isTokenMetadataPreloadedFor($tokenAuth)) {
+            return $authenticationToken->getPreloadedTokenMetadata();
+        }
+
+        return $this->getTokenMetadataByTokenAuthWithSecurityState($tokenAuth, $isTokenProvidedSecurely);
+    }
+
+    /**
+     * Returns metadata for a valid unexpired token using the provided transport security state.
+     *
+     * @internal Intended only for use by AuthenticationToken during request initialisation.
+     *           All other callers should use getTokenMetadataByTokenAuth() to benefit from
+     *           the preload cache and the correct security-state resolution.
+     * @return array<string,mixed>|null
+     * @throws \Exception
+     */
+    public function getTokenMetadataByTokenAuthWithSecurityState(
+        #[\SensitiveParameter]
+        ?string $tokenAuth,
+        bool $isTokenProvidedSecurely
+    ): ?array {
+        if ($tokenAuth === 'anonymous') {
+            $row = $this->getUser('anonymous');
+            return !empty($row) ? ['login' => 'anonymous', 'access_level' => null] : null;
+        }
+
+        return $this->getTokenByTokenAuthIfNotExpired($tokenAuth, $isTokenProvidedSecurely) ?: null;
     }
 
     /**
@@ -1145,5 +1304,37 @@ class Model
         foreach ($users as $user) {
             $this->updateUserFields($user['login'], ['ts_inactivity_notified' => $dtNotified]);
         }
+    }
+
+    private function checkValidTokenAccessLevel(string $accessLevel): void
+    {
+        $availableAccessLevels = $this->getTokenAccessLevelsDescending();
+        if (!in_array($accessLevel, $availableAccessLevels, true)) {
+            throw new \Exception(Piwik::translate("UsersManager_ExceptionAccessValues", [implode(", ", $availableAccessLevels), $accessLevel]));
+        }
+    }
+
+    private function checkRequestedTokenAccessLevelIsAllowed(string $requestedAccessLevel, string $maxAccessLevel): void
+    {
+        $accessRankings = $this->getTokenAccessLevelRanking();
+        if ($accessRankings[$requestedAccessLevel] > $accessRankings[$maxAccessLevel]) {
+            throw new \Exception(Piwik::translate('UsersManager_InvalidTokenAccessLevelTooHigh'));
+        }
+    }
+
+    /**
+     * @return array<string,int>
+     */
+    private function getTokenAccessLevelRanking(): array
+    {
+        return Access::getTokenAccessLevelRankings();
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getTokenAccessLevelsDescending(): array
+    {
+        return array_reverse(Access::getTokenAccessLevels());
     }
 }

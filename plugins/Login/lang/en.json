@@ -61,6 +61,7 @@
         "ConfirmPasswordToContinue": "Confirm your password to continue",
         "PluginDescription": "Provides username and password login as well as password reset functionality. The login method can be changed by using another login plugin such as LoginLdap available on the marketplace.",
         "RememberMe": "Remember Me",
+        "ScopedTokenCannotUseApiSession": "Scoped tokens cannot be used with force_api_session. Please use this token without session mode.",
         "SuspiciousLoginAttemptsInLastHourEmailSubject": "Some suspicious login attempts were made using your username…",
         "SuspiciousLoginAttemptsInLastHourEmail1": "A suspiciously high number of login attempts was made on your Matomo account the last hour. Specifically %1$s login attempts from %2$s distinct IP addresses. Someone may be trying to break into your account.",
         "SuspiciousLoginAttemptsInLastHourEmail2": "Do the following:",

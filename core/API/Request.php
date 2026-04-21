@@ -467,8 +467,22 @@ class Request
          *
          * @param string $token_auth The value of the **token_auth** query parameter.
          */
+        // The 'anonymous' fallback (e.g. injected by API\Controller::index() when no real token is present) can never
+        // grant superuser access, so resetting here would only clobber any superuser state set deliberately by the
+        // caller (e.g. CliMulti's --superuser observer for cron archiving subprocesses).
+        if (!empty($tokenAuth) && $tokenAuth !== 'anonymous') {
+            Access::getInstance()->setSuperUserAccess(false);
+        }
+        // Reset password-auth state on the shared Auth singleton before token authentication so any
+        // leftover hashed password from earlier in the same PHP process (e.g. set by
+        // PasswordVerifier::isPasswordCorrect() and never cleared) cannot pre-empt the token branch
+        // in Auth::authenticate(). The Piwik\Auth interface guarantees these setters on every
+        // implementation (Login, LoginLdap, custom plugins), so this single reset covers them all.
+        $authForReset = StaticContainer::get('Piwik\Auth');
+        $authForReset->setPasswordHash(null);
+        $authForReset->setPassword(null);
         Piwik::postEvent('API.Request.authenticate', array($tokenAuth));
-        if (!Access::getInstance()->reloadAccess() && $tokenAuth && $tokenAuth !== 'anonymous') {
+        if (!Access::getInstance()->reloadAccess(StaticContainer::get('Piwik\Auth')) && $tokenAuth && $tokenAuth !== 'anonymous') {
             /**
              * @ignore
              * @internal

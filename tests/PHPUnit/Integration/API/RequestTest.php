@@ -111,6 +111,29 @@ class RequestTest extends IntegrationTestCase
         $this->assertTrue($this->access->hasSuperUserAccess());
     }
 
+    public function testProcessClearsSuperUserPermissionBeforeAuthenticatingDifferentToken()
+    {
+        $this->access->setSuperUserAccess(true);
+        $this->access->expects($this->exactly(2))->method('reloadAccess');
+
+        $this->auth->expects($this->at(0))->method('setLogin')->with($this->equalTo(null));
+        $this->auth->expects($this->at(1))->method('setTokenAuth')->with($this->equalTo('scopedToken'));
+        $this->auth->expects($this->at(2))->method('authenticate')->willReturnCallback(function () {
+            $this->assertFalse($this->access->hasSuperUserAccess());
+            return new AuthResult(AuthResult::SUCCESS, 'login1', 'scopedToken');
+        });
+
+        $this->auth->expects($this->at(3))->method('setLogin')->with($this->equalTo(null));
+        $this->auth->expects($this->at(4))->method('setTokenAuth')->with($this->equalTo($this->userAuthToken));
+        $this->auth->expects($this->at(5))->method('authenticate')->will($this->returnValue(new AuthResult(AuthResult::SUCCESS, 'login', $this->userAuthToken)));
+
+        $request = new Request(array('method' => 'API.getPiwikVersion', 'token_auth' => 'scopedToken'));
+        $request->process();
+
+        $this->assertSameUserAsBeforeIsAuthenticated();
+        $this->assertTrue($this->access->hasSuperUserAccess());
+    }
+
     public function testIsApiRequestShouldDetectIfItIsApiRequestOrNot()
     {
         $this->assertFalse(Request::isApiRequest(array()));
