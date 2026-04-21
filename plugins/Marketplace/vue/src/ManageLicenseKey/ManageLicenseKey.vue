@@ -143,6 +143,7 @@ export default defineComponent({
     manageLicenseKeyIntro() {
       const marketplaceLink = `?${MatomoUrl.stringify({
         ...MatomoUrl.urlParsed.value,
+        idSite: MatomoUrl.parsed.value.idSite || MatomoUrl.urlParsed.value.idSite,
         module: 'Marketplace',
         action: 'overview',
       })}`;

@@ -150,6 +150,8 @@ export default defineComponent({
     },
     trialStartNoLicenseAddHereText() {
       const link = `?${MatomoUrl.stringify({
+        ...MatomoUrl.urlParsed.value,
+        idSite: MatomoUrl.parsed.value.idSite || MatomoUrl.urlParsed.value.idSite,
         module: 'Marketplace',
         action: 'manageLicenseKey',
       })}`;
