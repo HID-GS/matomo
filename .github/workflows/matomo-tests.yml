@@ -76,6 +76,40 @@ jobs:
             adapter: 'MYSQLI'
             mysql-engine: 'Mysql'
             mysql-version: '8.0'
+        parts: [0, 1, 2, 3, 4]
+        exclude:
+          - type: 'UnitTests'
+            parts: 1
+          - type: 'UnitTests'
+            parts: 2
+          - type: 'UnitTests'
+            parts: 3
+          - type: 'UnitTests'
+            parts: 4
+          - type: 'SystemTestsPlugins'
+            parts: 1
+          - type: 'SystemTestsPlugins'
+            parts: 2
+          - type: 'SystemTestsPlugins'
+            parts: 3
+          - type: 'SystemTestsPlugins'
+            parts: 4
+          - type: 'SystemTestsCore'
+            parts: 1
+          - type: 'SystemTestsCore'
+            parts: 2
+          - type: 'SystemTestsCore'
+            parts: 3
+          - type: 'SystemTestsCore'
+            parts: 4
+          - type: 'IntegrationTestsCore'
+            parts: 1
+          - type: 'IntegrationTestsCore'
+            parts: 2
+          - type: 'IntegrationTestsCore'
+            parts: 3
+          - type: 'IntegrationTestsCore'
+            parts: 4
     steps:
       - uses: actions/checkout@v6
         with:
@@ -85,7 +119,7 @@ jobs:
           path: matomo
           ref: ${{ inputs.ref || github.ref }}
       - name: running tests
-        uses: matomo-org/github-action-tests@main
+        uses: matomo-org/github-action-tests@more_integration_concurrency
         with:
           test-type: ${{ matrix.type }}
           mysql-driver: ${{ matrix.environment.adapter }}
@@ -97,6 +131,8 @@ jobs:
           upload-artifacts: ${{ matrix.environment.php == '7.2' }}
           testomatio: ${{ secrets.TESTOMATIO_INTEGRATION }}
           testomatio-force-report: ${{ contains('schedule,push', github.event_name) && github.run_attempt < 2 }}
+          phpunit-test-shards-total: ${{ matrix.type == 'IntegrationTestsPlugins' && 4 || 1 }}
+          phpunit-test-shard-index: ${{ matrix.parts }}
   Javascript:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
