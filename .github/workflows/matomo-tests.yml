@@ -131,7 +131,7 @@ jobs:
           upload-artifacts: ${{ matrix.environment.php == '7.2' }}
           testomatio: ${{ secrets.TESTOMATIO_INTEGRATION }}
           testomatio-force-report: ${{ contains('schedule,push', github.event_name) && github.run_attempt < 2 }}
-          phpunit-test-shards-total: ${{ matrix.type == 'IntegrationTestsPlugins' && 4 || 1 }}
+          phpunit-test-shards-total: ${{ matrix.type == 'IntegrationTestsPlugins' && 5 || 1 }}
           phpunit-test-shard-index: ${{ matrix.parts }}
   Javascript:
     runs-on: ubuntu-24.04
