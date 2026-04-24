@@ -212,7 +212,7 @@ jobs:
     if: ${{ needs.generate-matrices.outputs.integration_plugins_count != '0' }}
     strategy:
       fail-fast: ${{ inputs.is_preview == true }}
-      max-parallel: ${{ vars.MAX_PARALLEL_INTEGRATION_PLUGINS || 10 }}
+      max-parallel: ${{ vars.MAX_PARALLEL_INTEGRATION_PLUGINS || 20 }}
       matrix:
         include: ${{ fromJson(needs.generate-matrices.outputs.integration_plugins_matrix) }}
     steps:
@@ -293,7 +293,7 @@ jobs:
       - name: running tests
         uses: matomo-org/github-action-tests@main
         with:
-          ui-test-options: '--num-test-groups=${{ vars.UI_CORE_GROUP_COUNT || 4 }} --test-group=${{ matrix.part }}'
+          ui-test-options: '--core --num-test-groups=${{ vars.UI_CORE_GROUP_COUNT || 4 }} --test-group=${{ matrix.part }}'
           test-type: 'UI'
           php-version: '7.2'
           node-version: '16'
@@ -309,7 +309,7 @@ jobs:
     if: ${{ needs.generate-matrices.outputs.ui_plugins_count != '0' }}
     strategy:
       fail-fast: ${{ inputs.is_preview == true }}
-      max-parallel: ${{ vars.MAX_PARALLEL_UI_PLUGINS || 10 }}
+      max-parallel: ${{ vars.MAX_PARALLEL_UI_PLUGINS || 15 }}
       matrix:
         include: ${{ fromJson(needs.generate-matrices.outputs.ui_plugins_matrix) }}
     steps:

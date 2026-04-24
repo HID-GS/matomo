@@ -68,7 +68,17 @@ def has_system_tests(plugin_dir: Path) -> bool:
 
 
 def has_integration_tests(plugin_dir: Path) -> bool:
-    return get_plugin_suite_path(plugin_dir, "Integration") is not None
+    return has_files(
+        plugin_dir / "tests" / "Integration",
+        (".php",),
+        set(),
+        "Test.php",
+    ) or has_files(
+        plugin_dir / "Test" / "Integration",
+        (".php",),
+        set(),
+        "Test.php",
+    )
 
 
 def has_ui_tests(plugin_dir: Path) -> bool:
