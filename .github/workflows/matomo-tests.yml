@@ -40,6 +40,7 @@ on:
     - cron: "0 1-23/2 * * 6"
     # Sunday UTC hours: 01,03,05,07,09,11,13,15 (up to 16:00 DE)
     - cron: "0 1-15/2 * * 0"
+
 permissions:
   actions: read
   checks: none
@@ -56,26 +57,44 @@ concurrency:
   group: php-${{ inputs.ref || github.ref }}
   cancel-in-progress: true
 
+env:
+  PHP_TEST_ENVIRONMENTS: >-
+    [{"php":"7.2","adapter":"PDO_MYSQL","mysql-engine":"Mysql","mysql-version":"5.7"},{"php":"8.2","adapter":"PDO_MYSQL","mysql-engine":"Mariadb","mysql-version":"11.4"},{"php":"8.5","adapter":"MYSQLI","mysql-engine":"Mysql","mysql-version":"8.0"}]
+
 jobs:
-  PHP:
+  generate-matrices:
     runs-on: ubuntu-24.04
+    outputs:
+      unit_matrix: ${{ steps.generate.outputs.unit_matrix }}
+      system_core_matrix: ${{ steps.generate.outputs.system_core_matrix }}
+      system_plugins_matrix: ${{ steps.generate.outputs.system_plugins_matrix }}
+      integration_core_matrix: ${{ steps.generate.outputs.integration_core_matrix }}
+      integration_plugins_matrix: ${{ steps.generate.outputs.integration_plugins_matrix }}
+      ui_core_matrix: ${{ steps.generate.outputs.ui_core_matrix }}
+      ui_plugins_matrix: ${{ steps.generate.outputs.ui_plugins_matrix }}
+      system_plugins_count: ${{ steps.generate.outputs.system_plugins_count }}
+      integration_plugins_count: ${{ steps.generate.outputs.integration_plugins_count }}
+      ui_plugins_count: ${{ steps.generate.outputs.ui_plugins_count }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: false
+          persist-credentials: false
+          submodules: true
+          path: matomo
+          ref: ${{ inputs.ref || github.ref }}
+      - name: Generate test matrices
+        id: generate
+        run: python3 matomo/.github/scripts/generate_matomo_test_matrices.py --repo-root matomo --ui-core-group-count "${{ vars.UI_CORE_GROUP_COUNT || 4 }}"
+
+  UnitTests:
+    runs-on: ubuntu-24.04
+    needs: generate-matrices
     strategy:
       fail-fast: ${{ inputs.is_preview == true }}
+      max-parallel: ${{ vars.MAX_PARALLEL_UNIT_TESTS || 3 }}
       matrix:
-        type: [ 'UnitTests', 'SystemTestsPlugins', 'SystemTestsCore', 'IntegrationTestsCore', 'IntegrationTestsPlugins' ]
-        environment:
-          - php: '7.2'
-            adapter: 'PDO_MYSQL'
-            mysql-engine: 'Mysql'
-            mysql-version: '5.7'
-          - php: '8.2'
-            adapter: 'PDO_MYSQL'
-            mysql-engine: 'Mariadb'
-            mysql-version: '11.4'
-          - php: '8.5'
-            adapter: 'MYSQLI'
-            mysql-engine: 'Mysql'
-            mysql-version: '8.0'
+        include: ${{ fromJson(needs.generate-matrices.outputs.unit_matrix) }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -87,18 +106,139 @@ jobs:
       - name: running tests
         uses: matomo-org/github-action-tests@main
         with:
-          test-type: ${{ matrix.type }}
-          mysql-driver: ${{ matrix.environment.adapter }}
-          mysql-engine: ${{ matrix.environment.mysql-engine }}
-          mysql-version: ${{ matrix.environment.mysql-version }}
-          php-version: ${{ matrix.environment.php }}
+          test-type: 'UnitTests'
+          mysql-driver: ${{ matrix.adapter }}
+          mysql-engine: ${{ matrix['mysql-engine'] }}
+          mysql-version: ${{ matrix['mysql-version'] }}
+          php-version: ${{ matrix.php }}
           redis-service: true
           artifacts-pass: ${{ secrets.ARTIFACTS_PASS }}
-          upload-artifacts: ${{ matrix.environment.php == '7.2' }}
           testomatio: ${{ secrets.TESTOMATIO_INTEGRATION }}
           testomatio-force-report: ${{ contains('schedule,push', github.event_name) && github.run_attempt < 2 }}
+
+  SystemTestsCore:
+    runs-on: ubuntu-24.04
+    needs: generate-matrices
+    strategy:
+      fail-fast: ${{ inputs.is_preview == true }}
+      max-parallel: ${{ vars.MAX_PARALLEL_SYSTEM_CORE || 10 }}
+      matrix:
+        include: ${{ fromJson(needs.generate-matrices.outputs.system_core_matrix) }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: false
+          persist-credentials: false
+          submodules: true
+          path: matomo
+          ref: ${{ inputs.ref || github.ref }}
+      - name: running tests
+        uses: matomo-org/github-action-tests@main
+        with:
+          test-type: 'SystemTestsCore'
+          mysql-driver: ${{ matrix.adapter }}
+          mysql-engine: ${{ matrix['mysql-engine'] }}
+          mysql-version: ${{ matrix['mysql-version'] }}
+          php-version: ${{ matrix.php }}
+          redis-service: true
+          artifacts-pass: ${{ secrets.ARTIFACTS_PASS }}
+          upload-artifacts: ${{ matrix.php == '7.2' }}
+          testomatio: ${{ secrets.TESTOMATIO_INTEGRATION }}
+          testomatio-force-report: ${{ contains('schedule,push', github.event_name) && github.run_attempt < 2 }}
+
+  SystemTestsPlugins:
+    runs-on: ubuntu-24.04
+    needs: generate-matrices
+    if: ${{ needs.generate-matrices.outputs.system_plugins_count != '0' }}
+    strategy:
+      fail-fast: ${{ inputs.is_preview == true }}
+      max-parallel: ${{ vars.MAX_PARALLEL_SYSTEM_PLUGINS || 10 }}
+      matrix:
+        include: ${{ fromJson(needs.generate-matrices.outputs.system_plugins_matrix) }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: false
+          persist-credentials: false
+          submodules: true
+          path: matomo
+          ref: ${{ inputs.ref || github.ref }}
+      - name: running tests
+        uses: matomo-org/github-action-tests@main
+        with:
+          test-type: 'SystemTestsPlugins'
+          plugin-name: ${{ matrix['plugin-name'] }}
+          mysql-driver: ${{ matrix.adapter }}
+          mysql-engine: ${{ matrix['mysql-engine'] }}
+          mysql-version: ${{ matrix['mysql-version'] }}
+          php-version: ${{ matrix.php }}
+          redis-service: true
+          artifacts-pass: ${{ secrets.ARTIFACTS_PASS }}
+          upload-artifacts: ${{ matrix.php == '7.2' }}
+          testomatio: ${{ secrets.TESTOMATIO_INTEGRATION }}
+          testomatio-force-report: ${{ contains('schedule,push', github.event_name) && github.run_attempt < 2 }}
+
+  IntegrationTestsCore:
+    runs-on: ubuntu-24.04
+    needs: generate-matrices
+    strategy:
+      fail-fast: ${{ inputs.is_preview == true }}
+      max-parallel: ${{ vars.MAX_PARALLEL_INTEGRATION_CORE || 10 }}
+      matrix:
+        include: ${{ fromJson(needs.generate-matrices.outputs.integration_core_matrix) }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: false
+          persist-credentials: false
+          submodules: true
+          path: matomo
+          ref: ${{ inputs.ref || github.ref }}
+      - name: running tests
+        uses: matomo-org/github-action-tests@main
+        with:
+          test-type: 'IntegrationTestsCore'
+          mysql-driver: ${{ matrix.adapter }}
+          mysql-engine: ${{ matrix['mysql-engine'] }}
+          mysql-version: ${{ matrix['mysql-version'] }}
+          php-version: ${{ matrix.php }}
+          redis-service: true
+          testomatio: ${{ secrets.TESTOMATIO_INTEGRATION }}
+          testomatio-force-report: ${{ contains('schedule,push', github.event_name) && github.run_attempt < 2 }}
+
+  IntegrationTestsPlugins:
+    runs-on: ubuntu-24.04
+    needs: generate-matrices
+    if: ${{ needs.generate-matrices.outputs.integration_plugins_count != '0' }}
+    strategy:
+      fail-fast: ${{ inputs.is_preview == true }}
+      max-parallel: ${{ vars.MAX_PARALLEL_INTEGRATION_PLUGINS || 10 }}
+      matrix:
+        include: ${{ fromJson(needs.generate-matrices.outputs.integration_plugins_matrix) }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: false
+          persist-credentials: false
+          submodules: true
+          path: matomo
+          ref: ${{ inputs.ref || github.ref }}
+      - name: running tests
+        uses: matomo-org/github-action-tests@main
+        with:
+          test-type: 'IntegrationTestsPlugins'
+          plugin-name: ${{ matrix['plugin-name'] }}
+          mysql-driver: ${{ matrix.adapter }}
+          mysql-engine: ${{ matrix['mysql-engine'] }}
+          mysql-version: ${{ matrix['mysql-version'] }}
+          php-version: ${{ matrix.php }}
+          redis-service: true
+          testomatio: ${{ secrets.TESTOMATIO_INTEGRATION }}
+          testomatio-force-report: ${{ contains('schedule,push', github.event_name) && github.run_attempt < 2 }}
+
   Javascript:
     runs-on: ubuntu-24.04
+    needs: generate-matrices
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
@@ -114,8 +254,10 @@ jobs:
           test-type: 'JS'
           php-version: '7.2'
           node-version: '12'
+
   Client:
     runs-on: ubuntu-24.04
+    needs: generate-matrices
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
@@ -131,12 +273,15 @@ jobs:
           test-type: 'Client'
           node-version: '16'
           mysql-service: false
-  UI:
+
+  UICore:
     runs-on: ubuntu-24.04
+    needs: generate-matrices
     strategy:
       fail-fast: ${{ inputs.is_preview == true }}
+      max-parallel: ${{ vars.MAX_PARALLEL_UI_CORE || 10 }}
       matrix:
-        parts: [ 0,1,2,3,4,5,6,7,8,9 ]
+        include: ${{ fromJson(needs.generate-matrices.outputs.ui_core_matrix) }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -148,11 +293,42 @@ jobs:
       - name: running tests
         uses: matomo-org/github-action-tests@main
         with:
-          ui-test-options: '--num-test-groups=10 --test-group=${{ matrix.parts }}'
+          ui-test-options: '--num-test-groups=${{ vars.UI_CORE_GROUP_COUNT || 4 }} --test-group=${{ matrix.part }}'
           test-type: 'UI'
           php-version: '7.2'
           node-version: '16'
           redis-service: true
           artifacts-pass: ${{ secrets.ARTIFACTS_PASS }}
           upload-artifacts: true
-          testomatio: ${{ secrets.TESTOMATIO }}
+          testomatio: ${{ secrets.TESTOMATIO_INTEGRATION }}
+          testomatio-force-report: ${{ contains('schedule,push', github.event_name) && github.run_attempt < 2 }}
+
+  UIPlugins:
+    runs-on: ubuntu-24.04
+    needs: generate-matrices
+    if: ${{ needs.generate-matrices.outputs.ui_plugins_count != '0' }}
+    strategy:
+      fail-fast: ${{ inputs.is_preview == true }}
+      max-parallel: ${{ vars.MAX_PARALLEL_UI_PLUGINS || 10 }}
+      matrix:
+        include: ${{ fromJson(needs.generate-matrices.outputs.ui_plugins_matrix) }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: true
+          persist-credentials: false
+          submodules: true
+          path: matomo
+          ref: ${{ inputs.ref || github.ref }}
+      - name: running tests
+        uses: matomo-org/github-action-tests@main
+        with:
+          plugin-name: ${{ matrix['plugin-name'] }}
+          test-type: 'UI'
+          php-version: '7.2'
+          node-version: '16'
+          redis-service: true
+          artifacts-pass: ${{ secrets.ARTIFACTS_PASS }}
+          upload-artifacts: true
+          testomatio: ${{ secrets.TESTOMATIO_INTEGRATION }}
+          testomatio-force-report: ${{ contains('schedule,push', github.event_name) && github.run_attempt < 2 }}
