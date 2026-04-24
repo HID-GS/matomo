@@ -167,11 +167,11 @@ jobs:
         uses: matomo-org/github-action-tests@main
         with:
           test-type: 'SystemTestsPlugins'
-          plugin-name: ${{ matrix['plugin-name'] }}
           mysql-driver: ${{ matrix.adapter }}
           mysql-engine: ${{ matrix['mysql-engine'] }}
           mysql-version: ${{ matrix['mysql-version'] }}
           php-version: ${{ matrix.php }}
+          phpunit-test-options: ${{ matrix['phpunit-path'] }}
           redis-service: true
           artifacts-pass: ${{ secrets.ARTIFACTS_PASS }}
           upload-artifacts: ${{ matrix.php == '7.2' }}
@@ -227,11 +227,11 @@ jobs:
         uses: matomo-org/github-action-tests@main
         with:
           test-type: 'IntegrationTestsPlugins'
-          plugin-name: ${{ matrix['plugin-name'] }}
           mysql-driver: ${{ matrix.adapter }}
           mysql-engine: ${{ matrix['mysql-engine'] }}
           mysql-version: ${{ matrix['mysql-version'] }}
           php-version: ${{ matrix.php }}
+          phpunit-test-options: ${{ matrix['phpunit-path'] }}
           redis-service: true
           testomatio: ${{ secrets.TESTOMATIO_INTEGRATION }}
           testomatio-force-report: ${{ contains('schedule,push', github.event_name) && github.run_attempt < 2 }}
@@ -323,7 +323,7 @@ jobs:
       - name: running tests
         uses: matomo-org/github-action-tests@main
         with:
-          plugin-name: ${{ matrix['plugin-name'] }}
+          ui-test-options: "--plugin=${{ matrix['plugin-name'] }}"
           test-type: 'UI'
           php-version: '7.2'
           node-version: '16'

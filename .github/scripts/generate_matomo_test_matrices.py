@@ -68,9 +68,7 @@ def has_system_tests(plugin_dir: Path) -> bool:
 
 
 def has_integration_tests(plugin_dir: Path) -> bool:
-    return (plugin_dir / "tests" / "Integration").is_dir() or (
-        plugin_dir / "Test" / "Integration"
-    ).is_dir()
+    return get_plugin_suite_path(plugin_dir, "Integration") is not None
 
 
 def has_ui_tests(plugin_dir: Path) -> bool:
@@ -83,15 +81,24 @@ def has_ui_tests(plugin_dir: Path) -> bool:
     return False
 
 
+def get_plugin_suite_path(plugin_dir: Path, suite_dir: str) -> str | None:
+    if (plugin_dir / "tests" / suite_dir).is_dir():
+        return f"plugins/{plugin_dir.name}/tests/{suite_dir}/"
+    if (plugin_dir / "Test" / suite_dir).is_dir():
+        return f"plugins/{plugin_dir.name}/Test/{suite_dir}/"
+    return None
+
+
 def build_plugin_rows(
-    plugin_names: Iterable[str], php_environments: list[dict]
+    plugins: Iterable[tuple[str, str]], php_environments: list[dict]
 ) -> list[dict]:
     rows = []
-    for plugin_name in plugin_names:
+    for plugin_name, phpunit_path in plugins:
         for environment in php_environments:
             rows.append(
                 {
                     "plugin-name": plugin_name,
+                    "phpunit-path": phpunit_path,
                     "php": environment["php"],
                     "adapter": environment["adapter"],
                     "mysql-engine": environment["mysql-engine"],
@@ -146,8 +153,19 @@ def main() -> int:
     php_environments = load_php_environments(os.environ["PHP_TEST_ENVIRONMENTS"])
 
     plugins = list_plugins(plugins_root)
-    system_plugins = [plugin.name for plugin in plugins if has_system_tests(plugin)]
-    integration_plugins = [plugin.name for plugin in plugins if has_integration_tests(plugin)]
+    system_plugins = [
+        (plugin.name, get_plugin_suite_path(plugin, "System"))
+        for plugin in plugins
+        if has_system_tests(plugin)
+    ]
+    system_plugins = [(name, path) for name, path in system_plugins if path]
+
+    integration_plugins = [
+        (plugin.name, get_plugin_suite_path(plugin, "Integration"))
+        for plugin in plugins
+        if has_integration_tests(plugin)
+    ]
+    integration_plugins = [(name, path) for name, path in integration_plugins if path]
     ui_plugins = [plugin.name for plugin in plugins if has_ui_tests(plugin)]
 
     outputs = {
