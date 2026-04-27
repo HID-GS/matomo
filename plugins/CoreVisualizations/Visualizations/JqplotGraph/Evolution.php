@@ -12,6 +12,7 @@ namespace Piwik\Plugins\CoreVisualizations\Visualizations\JqplotGraph;
 use Piwik\API\Request as ApiRequest;
 use Piwik\Common;
 use Piwik\Container\StaticContainer;
+use Piwik\DataTable;
 use Piwik\Period\Factory;
 use Piwik\Period\Range;
 use Piwik\Plugins\CoreVisualizations\JqplotDataGenerator;
@@ -29,9 +30,26 @@ class Evolution extends JqplotGraph
     public const ID = 'graphEvolution';
     public const SERIES_COLOR_COUNT = 8;
 
+    /**
+     * Precomputed forecast values, keyed by series index then tick index. Populated
+     * by afterAllFiltersAreApplied() so beforeRender() can decide whether to expose
+     * the forecast toggle, and so the data generator can reuse the same result.
+     *
+     * @var array<int, array<int, float|null>>
+     */
+    private $forecastData = [];
+
     public static function getDefaultConfig()
     {
         return new Evolution\Config();
+    }
+
+    /**
+     * @return array<int, array<int, float|null>>
+     */
+    public function getForecastData(): array
+    {
+        return $this->forecastData;
     }
 
     public function beforeRender()
@@ -42,6 +60,16 @@ class Evolution extends JqplotGraph
 
         $this->config->show_flatten_table = false;
         $this->config->datatable_js_type = 'JqplotEvolutionGraphDataTable';
+
+        if (!$this->isComparing() && $this->hasAnyForecastValue()) {
+            $this->config->datatable_actions[] = [
+                'id' => 'dataTableShowForecast',
+                'title' => $this->config->show_forecast
+                    ? \Piwik\Piwik::translate('CoreHome_HideForecast')
+                    : \Piwik\Piwik::translate('CoreHome_ShowForecast'),
+                'icon' => $this->config->show_forecast ? 'icon-show' : 'icon-hide',
+            ];
+        }
     }
 
     public function beforeLoadDataTable()
@@ -72,6 +100,7 @@ class Evolution extends JqplotGraph
         }
 
         $this->config->custom_parameters['columns'] = $this->config->columns_to_display;
+        $this->config->custom_parameters['show_forecast'] = (int) $this->config->show_forecast;
 
         if ($this->isComparing()) {
             $this->config->show_limit_control = false; // since we always show the evolution over the period, there's no point in changing the limit
@@ -105,11 +134,56 @@ class Evolution extends JqplotGraph
 
             $this->config->x_axis_step_size = $this->getDefaultXAxisStepSize($rowCount);
         }
+
+        $this->forecastData = $this->precomputeForecastData();
     }
 
     protected function makeDataGenerator($properties)
     {
         return JqplotDataGenerator::factory('evolution', $properties, $this);
+    }
+
+    /**
+     * @return array<int, array<int, float|null>>
+     */
+    private function precomputeForecastData(): array
+    {
+        if ($this->isComparing()) {
+            return [];
+        }
+
+        /** @var DataTable|DataTable\Map|null $dataTable */
+        $dataTable = $this->dataTable;
+
+        if (!$dataTable instanceof DataTable\Map) {
+            return [];
+        }
+
+        // Same merge order as Visualization::render() when it populates
+        // $view->properties, so the precomputed forecast sees the same property
+        // set the rendered chart will.
+        $properties = array_merge(
+            $this->requestConfig->getProperties(),
+            $this->config->getProperties()
+        );
+
+        /** @var JqplotDataGenerator\Evolution $dataGenerator */
+        $dataGenerator = $this->makeDataGenerator($properties);
+
+        return $dataGenerator->precomputeForecast($dataTable);
+    }
+
+    private function hasAnyForecastValue(): bool
+    {
+        foreach ($this->forecastData as $seriesValues) {
+            foreach ($seriesValues as $value) {
+                if (null !== $value) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
