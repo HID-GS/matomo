@@ -164,6 +164,25 @@ jobs:
           submodules: true
           path: matomo
           ref: ${{ inputs.ref || github.ref }}
+      - name: Prepare system test bucket
+        run: |
+          bucket_path="matomo/${{ matrix['bucket-path'] }}"
+          rm -rf "$bucket_path"
+          mkdir -p "$bucket_path"
+
+          for source_root in ${{ matrix['bucket-source-roots'] }}; do
+            plugin_name="$(echo "$source_root" | cut -d/ -f2)"
+            tests_root_name="$(basename "$source_root")"
+            destination_parent="$bucket_path/plugins/$plugin_name"
+
+            mkdir -p "$destination_parent"
+            cp -R "matomo/$source_root" "$destination_parent/$tests_root_name"
+            rm -rf \
+              "$destination_parent/$tests_root_name/Integration" \
+              "$destination_parent/$tests_root_name/Unit" \
+              "$destination_parent/$tests_root_name/UI" \
+              "$destination_parent/$tests_root_name/javascript"
+          done
       - name: running tests
         uses: matomo-org/github-action-tests@main
         with:
@@ -172,7 +191,7 @@ jobs:
           mysql-engine: ${{ matrix['mysql-engine'] }}
           mysql-version: ${{ matrix['mysql-version'] }}
           php-version: ${{ matrix.php }}
-          phpunit-test-options: ${{ matrix['phpunit-paths'] }}
+          phpunit-test-options: ${{ matrix['bucket-path'] }}
           redis-service: true
           artifacts-pass: ${{ secrets.ARTIFACTS_PASS }}
           upload-artifacts: ${{ matrix.php == '7.2' }}
@@ -225,6 +244,25 @@ jobs:
           submodules: true
           path: matomo
           ref: ${{ inputs.ref || github.ref }}
+      - name: Prepare integration test bucket
+        run: |
+          bucket_path="matomo/${{ matrix['bucket-path'] }}"
+          rm -rf "$bucket_path"
+          mkdir -p "$bucket_path"
+
+          for source_root in ${{ matrix['bucket-source-roots'] }}; do
+            plugin_name="$(echo "$source_root" | cut -d/ -f2)"
+            tests_root_name="$(basename "$source_root")"
+            destination_parent="$bucket_path/plugins/$plugin_name"
+
+            mkdir -p "$destination_parent"
+            cp -R "matomo/$source_root" "$destination_parent/$tests_root_name"
+            rm -rf \
+              "$destination_parent/$tests_root_name/System" \
+              "$destination_parent/$tests_root_name/Unit" \
+              "$destination_parent/$tests_root_name/UI" \
+              "$destination_parent/$tests_root_name/javascript"
+          done
       - name: running tests
         uses: matomo-org/github-action-tests@main
         with:
@@ -233,7 +271,7 @@ jobs:
           mysql-engine: ${{ matrix['mysql-engine'] }}
           mysql-version: ${{ matrix['mysql-version'] }}
           php-version: ${{ matrix.php }}
-          phpunit-test-options: ${{ matrix['phpunit-paths'] }}
+          phpunit-test-options: ${{ matrix['bucket-path'] }}
           redis-service: true
           testomatio: ${{ secrets.TESTOMATIO_INTEGRATION }}
           testomatio-force-report: ${{ contains('schedule,push', github.event_name) && github.run_attempt < 2 }}

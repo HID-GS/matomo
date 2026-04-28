@@ -104,16 +104,24 @@ def get_plugin_suite_info(
     suite_dir: str,
     suffixes: tuple[str, ...],
     filename_suffix: str | None = None,
-) -> tuple[str, int] | None:
+) -> tuple[str, str, int] | None:
     candidates = [
-        (plugin_dir / "tests" / suite_dir, f"plugins/{plugin_dir.name}/tests/{suite_dir}/"),
-        (plugin_dir / "Test" / suite_dir, f"plugins/{plugin_dir.name}/Test/{suite_dir}/"),
+        (
+            plugin_dir / "tests" / suite_dir,
+            f"plugins/{plugin_dir.name}/tests/{suite_dir}/",
+            f"plugins/{plugin_dir.name}/tests",
+        ),
+        (
+            plugin_dir / "Test" / suite_dir,
+            f"plugins/{plugin_dir.name}/Test/{suite_dir}/",
+            f"plugins/{plugin_dir.name}/Test",
+        ),
     ]
 
-    for root, path in candidates:
+    for root, path, source_root in candidates:
         file_count = count_matching_files(root, suffixes, set(), filename_suffix)
         if file_count:
-            return path, file_count
+            return path, source_root, file_count
 
     return None
 
@@ -133,20 +141,21 @@ def get_ui_suite_info(plugin_dir: Path) -> tuple[str, int] | None:
 
 
 def bucket_suite_rows(
-    plugins: Iterable[tuple[str, str, int]], bucket_count: int
+    plugins: Iterable[tuple[str, str, str, int]], bucket_count: int, suite_name: str
 ) -> list[dict]:
-    plugins = sorted(plugins, key=lambda plugin: (-plugin[2], plugin[0]))
+    plugins = sorted(plugins, key=lambda plugin: (-plugin[3], plugin[0]))
     if not plugins:
         return []
 
     bucket_count = max(1, min(bucket_count, len(plugins)))
-    buckets = [{"weight": 0, "plugins": [], "paths": []} for _ in range(bucket_count)]
+    buckets = [{"weight": 0, "plugins": [], "paths": [], "source_roots": []} for _ in range(bucket_count)]
 
-    for plugin_name, phpunit_path, weight in plugins:
+    for plugin_name, phpunit_path, source_root, weight in plugins:
         bucket = min(buckets, key=lambda item: (item["weight"], len(item["plugins"])))
         bucket["weight"] += max(weight, 1)
         bucket["plugins"].append(plugin_name)
         bucket["paths"].append(phpunit_path)
+        bucket["source_roots"].append(source_root)
 
     non_empty_buckets = [bucket for bucket in buckets if bucket["plugins"]]
     total_buckets = len(non_empty_buckets)
@@ -154,9 +163,11 @@ def bucket_suite_rows(
     return [
         {
             "bucket-label": f"bucket-{index:02d}-of-{total_buckets:02d}",
+            "bucket-path": f"tmp/github-action-test-buckets/{suite_name}/bucket-{index:02d}",
             "plugin-count": len(bucket["plugins"]),
             "plugins": ", ".join(bucket["plugins"]),
             "phpunit-paths": " ".join(bucket["paths"]),
+            "bucket-source-roots": " ".join(bucket["source_roots"]),
         }
         for index, bucket in enumerate(non_empty_buckets, start=1)
     ]
@@ -171,9 +182,11 @@ def build_php_bucket_rows(
             rows.append(
                 {
                     "bucket-label": bucket["bucket-label"],
+                    "bucket-path": bucket["bucket-path"],
                     "plugin-count": bucket["plugin-count"],
                     "plugins": bucket["plugins"],
                     "phpunit-paths": bucket["phpunit-paths"],
+                    "bucket-source-roots": bucket["bucket-source-roots"],
                     "php": environment["php"],
                     "adapter": environment["adapter"],
                     "mysql-engine": environment["mysql-engine"],
@@ -238,21 +251,23 @@ def main() -> int:
     for plugin in plugins:
         system_info = get_plugin_suite_info(plugin, "System", (".php",), "Test.php")
         if system_info:
-            system_plugins.append((plugin.name, system_info[0], system_info[1]))
+            system_plugins.append((plugin.name, system_info[0], system_info[1], system_info[2]))
 
         integration_info = get_plugin_suite_info(plugin, "Integration", (".php",), "Test.php")
         if integration_info:
-            integration_plugins.append((plugin.name, integration_info[0], integration_info[1]))
+            integration_plugins.append(
+                (plugin.name, integration_info[0], integration_info[1], integration_info[2])
+            )
 
         ui_info = get_ui_suite_info(plugin)
         if ui_info:
             ui_plugins.append(plugin.name)
 
     system_plugin_buckets = bucket_suite_rows(
-        system_plugins, args.system_plugin_bucket_count
+        system_plugins, args.system_plugin_bucket_count, "system"
     )
     integration_plugin_buckets = bucket_suite_rows(
-        integration_plugins, args.integration_plugin_bucket_count
+        integration_plugins, args.integration_plugin_bucket_count, "integration"
     )
 
     outputs = {
