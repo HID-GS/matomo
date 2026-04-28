@@ -74,15 +74,16 @@ def get_bundled_plugins(repo_root: Path) -> set[str]:
     return bundled_plugins
 
 
-def has_files(
+def count_matching_files(
     root: Path,
     suffixes: tuple[str, ...],
     excluded_parts: set[str],
     filename_suffix: str | None = None,
-) -> bool:
+) -> int:
     if not root.is_dir():
-        return False
+        return 0
 
+    count = 0
     for path in root.rglob("*"):
         if not path.is_file() or path.suffix not in suffixes:
             continue
@@ -93,70 +94,86 @@ def has_files(
         if relative_parts & excluded_parts:
             continue
 
-        return True
+        count += 1
 
-    return False
-
-
-def has_system_tests(plugin_dir: Path) -> bool:
-    excluded = {
-        "Integration",
-        "Unit",
-        "UI",
-        "javascript",
-        "Fixtures",
-        "Fixture",
-        "Mocks",
-        "resources",
-        "expected",
-    }
-    return has_files(plugin_dir / "tests", (".php",), excluded, "Test.php") or has_files(
-        plugin_dir / "Test", (".php",), excluded, "Test.php"
-    )
+    return count
 
 
-def has_integration_tests(plugin_dir: Path) -> bool:
-    return has_files(
-        plugin_dir / "tests" / "Integration",
-        (".php",),
-        set(),
-        "Test.php",
-    ) or has_files(
-        plugin_dir / "Test" / "Integration",
-        (".php",),
-        set(),
-        "Test.php",
-    )
+def get_plugin_suite_info(
+    plugin_dir: Path,
+    suite_dir: str,
+    suffixes: tuple[str, ...],
+    filename_suffix: str | None = None,
+) -> tuple[str, int] | None:
+    candidates = [
+        (plugin_dir / "tests" / suite_dir, f"plugins/{plugin_dir.name}/tests/{suite_dir}/"),
+        (plugin_dir / "Test" / suite_dir, f"plugins/{plugin_dir.name}/Test/{suite_dir}/"),
+    ]
 
+    for root, path in candidates:
+        file_count = count_matching_files(root, suffixes, set(), filename_suffix)
+        if file_count:
+            return path, file_count
 
-def has_ui_tests(plugin_dir: Path) -> bool:
-    candidates = [plugin_dir / "tests" / "UI", plugin_dir / "Test" / "UI"]
-    for root in candidates:
-        if has_files(root, (".js",), set()) and any(
-            path.name.endswith("_spec.js") for path in root.rglob("*") if path.is_file()
-        ):
-            return True
-    return False
-
-
-def get_plugin_suite_path(plugin_dir: Path, suite_dir: str) -> str | None:
-    if (plugin_dir / "tests" / suite_dir).is_dir():
-        return f"plugins/{plugin_dir.name}/tests/{suite_dir}/"
-    if (plugin_dir / "Test" / suite_dir).is_dir():
-        return f"plugins/{plugin_dir.name}/Test/{suite_dir}/"
     return None
 
 
-def build_plugin_rows(
-    plugins: Iterable[tuple[str, str]], php_environments: list[dict]
+def get_ui_suite_info(plugin_dir: Path) -> tuple[str, int] | None:
+    candidates = [
+        (plugin_dir / "tests" / "UI", f"plugins/{plugin_dir.name}/tests/UI/"),
+        (plugin_dir / "Test" / "UI", f"plugins/{plugin_dir.name}/Test/UI/"),
+    ]
+
+    for root, path in candidates:
+        spec_count = count_matching_files(root, (".js",), set(), "_spec.js")
+        if spec_count:
+            return path, spec_count
+
+    return None
+
+
+def bucket_suite_rows(
+    plugins: Iterable[tuple[str, str, int]], bucket_count: int
+) -> list[dict]:
+    plugins = sorted(plugins, key=lambda plugin: (-plugin[2], plugin[0]))
+    if not plugins:
+        return []
+
+    bucket_count = max(1, min(bucket_count, len(plugins)))
+    buckets = [{"weight": 0, "plugins": [], "paths": []} for _ in range(bucket_count)]
+
+    for plugin_name, phpunit_path, weight in plugins:
+        bucket = min(buckets, key=lambda item: (item["weight"], len(item["plugins"])))
+        bucket["weight"] += max(weight, 1)
+        bucket["plugins"].append(plugin_name)
+        bucket["paths"].append(phpunit_path)
+
+    non_empty_buckets = [bucket for bucket in buckets if bucket["plugins"]]
+    total_buckets = len(non_empty_buckets)
+
+    return [
+        {
+            "bucket-label": f"bucket-{index:02d}-of-{total_buckets:02d}",
+            "plugin-count": len(bucket["plugins"]),
+            "plugins": ", ".join(bucket["plugins"]),
+            "phpunit-paths": " ".join(bucket["paths"]),
+        }
+        for index, bucket in enumerate(non_empty_buckets, start=1)
+    ]
+
+
+def build_php_bucket_rows(
+    buckets: Iterable[dict], php_environments: list[dict]
 ) -> list[dict]:
     rows = []
-    for plugin_name, phpunit_path in plugins:
+    for bucket in buckets:
         for environment in php_environments:
             rows.append(
                 {
-                    "plugin-name": plugin_name,
-                    "phpunit-path": phpunit_path,
+                    "bucket-label": bucket["bucket-label"],
+                    "plugin-count": bucket["plugin-count"],
+                    "plugins": bucket["plugins"],
+                    "phpunit-paths": bucket["phpunit-paths"],
                     "php": environment["php"],
                     "adapter": environment["adapter"],
                     "mysql-engine": environment["mysql-engine"],
@@ -204,6 +221,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", required=True)
     parser.add_argument("--ui-core-group-count", required=True, type=int)
+    parser.add_argument("--system-plugin-bucket-count", required=True, type=int)
+    parser.add_argument("--integration-plugin-bucket-count", required=True, type=int)
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve()
@@ -212,27 +231,40 @@ def main() -> int:
     bundled_plugins = get_bundled_plugins(repo_root)
 
     plugins = [plugin for plugin in list_plugins(plugins_root) if plugin.name in bundled_plugins]
-    system_plugins = [
-        (plugin.name, get_plugin_suite_path(plugin, "System"))
-        for plugin in plugins
-        if has_system_tests(plugin)
-    ]
-    system_plugins = [(name, path) for name, path in system_plugins if path]
+    system_plugins = []
+    integration_plugins = []
+    ui_plugins = []
 
-    integration_plugins = [
-        (plugin.name, get_plugin_suite_path(plugin, "Integration"))
-        for plugin in plugins
-        if has_integration_tests(plugin)
-    ]
-    integration_plugins = [(name, path) for name, path in integration_plugins if path]
-    ui_plugins = [plugin.name for plugin in plugins if has_ui_tests(plugin)]
+    for plugin in plugins:
+        system_info = get_plugin_suite_info(plugin, "System", (".php",), "Test.php")
+        if system_info:
+            system_plugins.append((plugin.name, system_info[0], system_info[1]))
+
+        integration_info = get_plugin_suite_info(plugin, "Integration", (".php",), "Test.php")
+        if integration_info:
+            integration_plugins.append((plugin.name, integration_info[0], integration_info[1]))
+
+        ui_info = get_ui_suite_info(plugin)
+        if ui_info:
+            ui_plugins.append(plugin.name)
+
+    system_plugin_buckets = bucket_suite_rows(
+        system_plugins, args.system_plugin_bucket_count
+    )
+    integration_plugin_buckets = bucket_suite_rows(
+        integration_plugins, args.integration_plugin_bucket_count
+    )
 
     outputs = {
         "unit_matrix": build_core_rows(php_environments),
         "system_core_matrix": build_core_rows(php_environments),
-        "system_plugins_matrix": build_plugin_rows(system_plugins, php_environments),
+        "system_plugins_matrix": build_php_bucket_rows(
+            system_plugin_buckets, php_environments
+        ),
         "integration_core_matrix": build_core_rows(php_environments),
-        "integration_plugins_matrix": build_plugin_rows(integration_plugins, php_environments),
+        "integration_plugins_matrix": build_php_bucket_rows(
+            integration_plugin_buckets, php_environments
+        ),
         "ui_core_matrix": build_ui_core_rows(args.ui_core_group_count),
         "ui_plugins_matrix": [{"plugin-name": plugin_name} for plugin_name in ui_plugins],
     }

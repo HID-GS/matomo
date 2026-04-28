@@ -85,7 +85,7 @@ jobs:
           ref: ${{ inputs.ref || github.ref }}
       - name: Generate test matrices
         id: generate
-        run: python3 matomo/.github/scripts/generate_matomo_test_matrices.py --repo-root matomo --ui-core-group-count "${{ vars.UI_CORE_GROUP_COUNT || 4 }}"
+        run: python3 matomo/.github/scripts/generate_matomo_test_matrices.py --repo-root matomo --ui-core-group-count "${{ vars.UI_CORE_GROUP_COUNT || 6 }}" --system-plugin-bucket-count "${{ vars.SYSTEM_PLUGIN_BUCKET_COUNT || 12 }}" --integration-plugin-bucket-count "${{ vars.INTEGRATION_PLUGIN_BUCKET_COUNT || 10 }}"
 
   UnitTests:
     runs-on: ubuntu-24.04
@@ -147,12 +147,13 @@ jobs:
           testomatio-force-report: ${{ contains('schedule,push', github.event_name) && github.run_attempt < 2 }}
 
   SystemTestsPlugins:
+    name: SystemTestsPlugins (${{ matrix['bucket-label'] }}, ${{ matrix.php }}, ${{ matrix.adapter }}, ${{ matrix['mysql-engine'] }}, ${{ matrix['mysql-version'] }})
     runs-on: ubuntu-24.04
     needs: generate-matrices
     if: ${{ needs.generate-matrices.outputs.system_plugins_count != '0' }}
     strategy:
       fail-fast: ${{ inputs.is_preview == true }}
-      max-parallel: ${{ vars.MAX_PARALLEL_SYSTEM_PLUGINS || 10 }}
+      max-parallel: ${{ vars.MAX_PARALLEL_SYSTEM_PLUGINS || 12 }}
       matrix:
         include: ${{ fromJson(needs.generate-matrices.outputs.system_plugins_matrix) }}
     steps:
@@ -171,7 +172,7 @@ jobs:
           mysql-engine: ${{ matrix['mysql-engine'] }}
           mysql-version: ${{ matrix['mysql-version'] }}
           php-version: ${{ matrix.php }}
-          phpunit-test-options: ${{ matrix['phpunit-path'] }}
+          phpunit-test-options: ${{ matrix['phpunit-paths'] }}
           redis-service: true
           artifacts-pass: ${{ secrets.ARTIFACTS_PASS }}
           upload-artifacts: ${{ matrix.php == '7.2' }}
@@ -207,12 +208,13 @@ jobs:
           testomatio-force-report: ${{ contains('schedule,push', github.event_name) && github.run_attempt < 2 }}
 
   IntegrationTestsPlugins:
+    name: IntegrationTestsPlugins (${{ matrix['bucket-label'] }}, ${{ matrix.php }}, ${{ matrix.adapter }}, ${{ matrix['mysql-engine'] }}, ${{ matrix['mysql-version'] }})
     runs-on: ubuntu-24.04
     needs: generate-matrices
     if: ${{ needs.generate-matrices.outputs.integration_plugins_count != '0' }}
     strategy:
       fail-fast: ${{ inputs.is_preview == true }}
-      max-parallel: ${{ vars.MAX_PARALLEL_INTEGRATION_PLUGINS || 30 }}
+      max-parallel: ${{ vars.MAX_PARALLEL_INTEGRATION_PLUGINS || 15 }}
       matrix:
         include: ${{ fromJson(needs.generate-matrices.outputs.integration_plugins_matrix) }}
     steps:
@@ -231,7 +233,7 @@ jobs:
           mysql-engine: ${{ matrix['mysql-engine'] }}
           mysql-version: ${{ matrix['mysql-version'] }}
           php-version: ${{ matrix.php }}
-          phpunit-test-options: ${{ matrix['phpunit-path'] }}
+          phpunit-test-options: ${{ matrix['phpunit-paths'] }}
           redis-service: true
           testomatio: ${{ secrets.TESTOMATIO_INTEGRATION }}
           testomatio-force-report: ${{ contains('schedule,push', github.event_name) && github.run_attempt < 2 }}
@@ -293,7 +295,7 @@ jobs:
       - name: running tests
         uses: matomo-org/github-action-tests@main
         with:
-          ui-test-options: '--core-tests-only --num-test-groups=${{ vars.UI_CORE_GROUP_COUNT || 4 }} --test-group=${{ matrix.part }}'
+          ui-test-options: '--core-tests-only --num-test-groups=${{ vars.UI_CORE_GROUP_COUNT || 6 }} --test-group=${{ matrix.part }}'
           test-type: 'UI'
           php-version: '7.2'
           node-version: '16'
