@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import re
 from pathlib import Path
 from typing import Iterable
 
@@ -24,6 +25,53 @@ def load_php_environments(raw: str) -> list[dict]:
 
 def list_plugins(plugins_root: Path) -> list[Path]:
     return sorted(path for path in plugins_root.iterdir() if path.is_dir())
+
+
+def parse_global_ini_plugins(global_ini_path: Path) -> set[str]:
+    plugins: set[str] = set()
+    in_plugins_section = False
+
+    for raw_line in global_ini_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+
+        if not line or line.startswith(";"):
+            continue
+
+        if line == "[Plugins]":
+            in_plugins_section = True
+            continue
+
+        if in_plugins_section and line.startswith("["):
+            break
+
+        if in_plugins_section and line.startswith("Plugins[]"):
+            _, value = line.split("=", 1)
+            plugins.add(value.strip())
+
+    return plugins
+
+
+def parse_core_plugins_disabled_by_default(plugin_list_path: Path) -> set[str]:
+    contents = plugin_list_path.read_text(encoding="utf-8")
+    match = re.search(
+        r"private \$corePluginsDisabledByDefault = array\((.*?)\);",
+        contents,
+        re.S,
+    )
+    if not match:
+        raise ValueError("Unable to parse corePluginsDisabledByDefault from PluginList.php")
+
+    return set(re.findall(r"'([^']+)'", match.group(1)))
+
+
+def get_bundled_plugins(repo_root: Path) -> set[str]:
+    bundled_plugins = parse_global_ini_plugins(repo_root / "config" / "global.ini.php")
+    bundled_plugins.update(
+        parse_core_plugins_disabled_by_default(
+            repo_root / "core" / "Application" / "Kernel" / "PluginList.php"
+        )
+    )
+    return bundled_plugins
 
 
 def has_files(
@@ -161,8 +209,9 @@ def main() -> int:
     repo_root = Path(args.repo_root).resolve()
     plugins_root = repo_root / "plugins"
     php_environments = load_php_environments(os.environ["PHP_TEST_ENVIRONMENTS"])
+    bundled_plugins = get_bundled_plugins(repo_root)
 
-    plugins = list_plugins(plugins_root)
+    plugins = [plugin for plugin in list_plugins(plugins_root) if plugin.name in bundled_plugins]
     system_plugins = [
         (plugin.name, get_plugin_suite_path(plugin, "System"))
         for plugin in plugins
