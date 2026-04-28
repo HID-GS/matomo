@@ -30,14 +30,14 @@ class EvolutionTest extends TestCase
     {
         $evolution = $this->createEvolution(['show_forecast' => 0], false);
 
-        self::assertSame([], $evolution->callBuildForecastData([], [], [], [], []));
+        self::assertSame([], $evolution->callBuildForecastData([], [], [], [], [], []));
     }
 
     public function testBuildForecastDataReturnsEmptyWhenComparing(): void
     {
         $evolution = $this->createEvolution(['show_forecast' => 1], true);
 
-        self::assertSame([], $evolution->callBuildForecastData([], [], [], [], []));
+        self::assertSame([], $evolution->callBuildForecastData([], [], [], [], [], []));
     }
 
     /**
@@ -134,7 +134,8 @@ class EvolutionTest extends TestCase
             $dataTables,
             [ArchiveState::COMPLETE, ArchiveState::INCOMPLETE],
             ['Visits' => false],
-            ['Visits' => [true, true]]
+            ['Visits' => [true, true]],
+            ['Visits' => false]
         );
 
         self::assertCount(1, $forecast);
@@ -161,6 +162,7 @@ class EvolutionTest extends TestCase
              * @param array<int, string> $dataStates
              * @param array<string, string|false> $seriesUnits
              * @param array<string, array<int, bool>> $allSeriesDataAvailability
+             * @param array<string, bool> $allSeriesAllowsDownwardForecast
              * @return array<int, array<int, float|null>>
              */
             public function callBuildForecastData(
@@ -168,14 +170,16 @@ class EvolutionTest extends TestCase
                 array $dataTables,
                 array $dataStates,
                 array $seriesUnits,
-                array $allSeriesDataAvailability
+                array $allSeriesDataAvailability,
+                array $allSeriesAllowsDownwardForecast
             ): array {
                 return $this->buildForecastData(
                     $allSeriesData,
                     $dataTables,
                     $dataStates,
                     $seriesUnits,
-                    $allSeriesDataAvailability
+                    $allSeriesDataAvailability,
+                    $allSeriesAllowsDownwardForecast
                 );
             }
         };

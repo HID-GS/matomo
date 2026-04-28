@@ -81,6 +81,7 @@ class Evolution extends JqplotDataGenerator
         // collect series data to show. each row-to-display/column-to-display permutation creates a series.
         $allSeriesData = [];
         $allSeriesDataAvailability = [];
+        $allSeriesAllowsDownwardForecast = [];
         foreach ($rowsToDisplay as $rowIdentifier) {
             $rowLabel = $rowIdentifier;
 
@@ -93,10 +94,32 @@ class Evolution extends JqplotDataGenerator
             }
 
             foreach ($columnsToDisplay as $columnName) {
+                $columnAllowsDownwardForecast = $this->columnAllowsDownwardForecast(
+                    $columnName,
+                    $units[$columnName] ?? false
+                );
+
                 if (!$this->isComparing) {
-                    $this->setNonComparisonSeriesData($allSeriesData, $allSeriesDataAvailability, $rowLabel, $columnName, $dataTable);
+                    $this->setNonComparisonSeriesData(
+                        $allSeriesData,
+                        $allSeriesDataAvailability,
+                        $allSeriesAllowsDownwardForecast,
+                        $rowLabel,
+                        $columnName,
+                        $columnAllowsDownwardForecast,
+                        $dataTable
+                    );
                 } else {
-                    $this->setComparisonSeriesData($allSeriesData, $allSeriesDataAvailability, $seriesLabels, $rowLabel, $columnName, $dataTable);
+                    $this->setComparisonSeriesData(
+                        $allSeriesData,
+                        $allSeriesDataAvailability,
+                        $allSeriesAllowsDownwardForecast,
+                        $seriesLabels,
+                        $rowLabel,
+                        $columnName,
+                        $columnAllowsDownwardForecast,
+                        $dataTable
+                    );
                 }
             }
         }
@@ -144,7 +167,14 @@ class Evolution extends JqplotDataGenerator
 
         $dataStates = $this->setDataStates($visualization, $dataTables);
         $visualization->setForecastData(
-            $this->buildForecastData($allSeriesData, $dataTables, $dataStates, $seriesUnits, $allSeriesDataAvailability)
+            $this->buildForecastData(
+                $allSeriesData,
+                $dataTables,
+                $dataStates,
+                $seriesUnits,
+                $allSeriesDataAvailability,
+                $allSeriesAllowsDownwardForecast
+            )
         );
     }
 
@@ -154,6 +184,7 @@ class Evolution extends JqplotDataGenerator
      * @param array<int, string> $dataStates
      * @param array<string, string|false> $seriesUnits
      * @param array<string, array<int, bool>> $allSeriesDataAvailability
+     * @param array<string, bool> $allSeriesAllowsDownwardForecast
      * @return array<int, array<int, float|null>>
      */
     protected function buildForecastData(
@@ -161,7 +192,8 @@ class Evolution extends JqplotDataGenerator
         array $dataTables,
         array $dataStates,
         array $seriesUnits,
-        array $allSeriesDataAvailability
+        array $allSeriesDataAvailability,
+        array $allSeriesAllowsDownwardForecast
     ): array {
         if (empty($this->properties['show_forecast']) || $this->isComparing) {
             return [];
@@ -176,7 +208,33 @@ class Evolution extends JqplotDataGenerator
             }
         }
 
-        return (new ForecastBuilder())->build($allSeriesData, $dataTables, $dataStates, $seriesUnits, $allSeriesDataAvailability);
+        return (new ForecastBuilder())->build(
+            $allSeriesData,
+            $dataTables,
+            $dataStates,
+            $seriesUnits,
+            $allSeriesDataAvailability,
+            $allSeriesAllowsDownwardForecast
+        );
+    }
+
+    /**
+     * Whether forecasts for a given column may legitimately fall below the current partial value.
+     *
+     * Counts (visits, conversions, etc.) only grow within an incomplete period, so their forecast
+     * is gated by the "forecast >= current" rule. Ratios and lower-is-better metrics (bounce rate,
+     * exit rate, average page generation time, position) can move either way during the period
+     * and need the gate lifted, otherwise valid downward trends are silently suppressed.
+     *
+     * @param string|false $columnUnit
+     */
+    private function columnAllowsDownwardForecast(string $columnName, $columnUnit): bool
+    {
+        if ($columnUnit === '%') {
+            return true;
+        }
+
+        return Metrics::isLowerValueBetter($columnName);
     }
 
     private function getSeriesData($rowLabel, $columnName, DataTable\Map $dataTable, &$seriesDataAvailability)
@@ -295,17 +353,33 @@ class Evolution extends JqplotDataGenerator
         }
     }
 
-    private function setNonComparisonSeriesData(array &$allSeriesData, array &$allSeriesDataAvailability, $rowLabel, $columnName, DataTable\Map $dataTable)
-    {
+    private function setNonComparisonSeriesData(
+        array &$allSeriesData,
+        array &$allSeriesDataAvailability,
+        array &$allSeriesAllowsDownwardForecast,
+        $rowLabel,
+        $columnName,
+        bool $columnAllowsDownwardForecast,
+        DataTable\Map $dataTable
+    ) {
         $seriesLabel = $this->getSeriesLabel($rowLabel, $columnName);
 
         $seriesData = $this->getSeriesData($rowLabel, $columnName, $dataTable, $seriesDataAvailability);
         $allSeriesData[$seriesLabel] = $seriesData;
         $allSeriesDataAvailability[$seriesLabel] = $seriesDataAvailability;
+        $allSeriesAllowsDownwardForecast[$seriesLabel] = $columnAllowsDownwardForecast;
     }
 
-    private function setComparisonSeriesData(array &$allSeriesData, array &$allSeriesDataAvailability, array $seriesLabels, $rowLabel, $columnName, DataTable\Map $dataTable)
-    {
+    private function setComparisonSeriesData(
+        array &$allSeriesData,
+        array &$allSeriesDataAvailability,
+        array &$allSeriesAllowsDownwardForecast,
+        array $seriesLabels,
+        $rowLabel,
+        $columnName,
+        bool $columnAllowsDownwardForecast,
+        DataTable\Map $dataTable
+    ) {
         foreach ($dataTable->getDataTables() as $label => $childTable) {
             // get the row for this label (use the first if $rowLabel is false)
             if ($rowLabel === false) {
@@ -322,6 +396,7 @@ class Evolution extends JqplotDataGenerator
                     $wholeSeriesLabel = $this->getComparisonSeriesLabelFromCompareSeries($seriesLabelPrefix, $columnName, $rowLabel);
                     $allSeriesData[$wholeSeriesLabel][] = 0;
                     $allSeriesDataAvailability[$wholeSeriesLabel][] = false;
+                    $allSeriesAllowsDownwardForecast[$wholeSeriesLabel] = $columnAllowsDownwardForecast;
                 }
 
                 continue;
@@ -334,6 +409,7 @@ class Evolution extends JqplotDataGenerator
                 $value = $compareRow->getColumn($columnName);
                 $allSeriesData[$seriesLabel][] = $value;
                 $allSeriesDataAvailability[$seriesLabel][] = $this->hasColumnValue($value);
+                $allSeriesAllowsDownwardForecast[$seriesLabel] = $columnAllowsDownwardForecast;
             }
 
             $totalsRow = $comparisonTable->getTotalsRow();
@@ -342,6 +418,7 @@ class Evolution extends JqplotDataGenerator
                 $value = $totalsRow->getColumn($columnName);
                 $allSeriesData[$seriesLabel][] = $value;
                 $allSeriesDataAvailability[$seriesLabel][] = $this->hasColumnValue($value);
+                $allSeriesAllowsDownwardForecast[$seriesLabel] = $columnAllowsDownwardForecast;
             }
         }
     }
@@ -487,6 +564,7 @@ class Evolution extends JqplotDataGenerator
 
         $allSeriesData = [];
         $allSeriesDataAvailability = [];
+        $allSeriesAllowsDownwardForecast = [];
         foreach ($rowsToDisplay as $rowIdentifier) {
             $rowLabel = $rowIdentifier;
 
@@ -499,7 +577,20 @@ class Evolution extends JqplotDataGenerator
             }
 
             foreach ($columnsToDisplay as $columnName) {
-                $this->setNonComparisonSeriesData($allSeriesData, $allSeriesDataAvailability, $rowLabel, $columnName, $dataTable);
+                $columnAllowsDownwardForecast = $this->columnAllowsDownwardForecast(
+                    $columnName,
+                    $units[$columnName] ?? false
+                );
+
+                $this->setNonComparisonSeriesData(
+                    $allSeriesData,
+                    $allSeriesDataAvailability,
+                    $allSeriesAllowsDownwardForecast,
+                    $rowLabel,
+                    $columnName,
+                    $columnAllowsDownwardForecast,
+                    $dataTable
+                );
             }
         }
 
@@ -508,7 +599,8 @@ class Evolution extends JqplotDataGenerator
             $dataTables,
             $dataStates,
             $seriesUnits,
-            $allSeriesDataAvailability
+            $allSeriesDataAvailability,
+            $allSeriesAllowsDownwardForecast
         );
     }
 }

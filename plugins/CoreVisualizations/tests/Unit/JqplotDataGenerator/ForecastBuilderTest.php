@@ -70,25 +70,32 @@ class ForecastBuilderTest extends TestCase
     /**
      * @dataProvider provideForecastVisibilityCases
      */
-    public function testShouldRenderForecastValue(float $forecastValue, float $currentValue, bool $expected): void
-    {
+    public function testShouldRenderForecastValue(
+        float $forecastValue,
+        float $currentValue,
+        bool $allowsDownward,
+        bool $expected
+    ): void {
         $result = $this->invokePrivateMethod(
             new ForecastBuilder(),
             'shouldRenderForecastValue',
-            [$forecastValue, $currentValue]
+            [$forecastValue, $currentValue, $allowsDownward]
         );
 
         self::assertSame($expected, $result);
     }
 
     /**
-     * @return iterable<string, array{float, float, bool}>
+     * @return iterable<string, array{float, float, bool, bool}>
      */
     public function provideForecastVisibilityCases(): iterable
     {
-        yield 'higher than current' => [12.5, 10.0, true];
-        yield 'equal to current' => [10.0, 10.0, true];
-        yield 'below current' => [9.99, 10.0, false];
+        yield 'monotonic, higher than current' => [12.5, 10.0, false, true];
+        yield 'monotonic, equal to current' => [10.0, 10.0, false, true];
+        yield 'monotonic, below current' => [9.99, 10.0, false, false];
+        yield 'non-monotonic, higher than current' => [12.5, 10.0, true, true];
+        yield 'non-monotonic, equal to current' => [10.0, 10.0, true, true];
+        yield 'non-monotonic, below current' => [9.99, 10.0, true, true];
     }
 
     public function testBuildUsesPriorForecastAsFirstNoDataBaseline(): void
@@ -121,7 +128,7 @@ class ForecastBuilderTest extends TestCase
         self::assertSame([[null, null, null, null, 47.9996, 58.3997]], $forecastData);
     }
 
-    public function testBuildKeepsPercentSeriesOnDisplayScale(): void
+    public function testBuildPercentSeriesUsesHistoricalPriorWithoutLinearExtrapolation(): void
     {
         $site = $this->createSiteMock();
 
@@ -130,6 +137,9 @@ class ForecastBuilderTest extends TestCase
             $this->createDataTableForDay('2026-04-17', $site, '2026-04-17 12:00:00'),
         ];
 
+        // Percent series: linear elapsed-ratio extrapolation does not apply, so the forecast is
+        // the same-weekday historical prior. Without a flag the builder falls back to
+        // "percent unit implies non-monotonic", which is what we exercise here.
         $forecastData = (new ForecastBuilder())->build(
             ['Bounce rate' => [80.0, 20.0]],
             $dataTables,
@@ -140,7 +150,84 @@ class ForecastBuilderTest extends TestCase
             ['Bounce rate' => '%']
         );
 
-        self::assertSame([[null, 47.9996]], $forecastData);
+        self::assertSame([[null, 80.0]], $forecastData);
+    }
+
+    public function testBuildPercentSeriesAllowsForecastBelowCurrentValue(): void
+    {
+        $site = $this->createSiteMock();
+
+        $dataTables = [
+            $this->createDataTableForDay('2026-04-10', $site),
+            $this->createDataTableForDay('2026-04-17', $site, '2026-04-17 12:00:00'),
+        ];
+
+        // Prior bounce rate (20%) is below the current partial value (80%). For a count series
+        // this would be suppressed; for a percent (non-monotonic) series the downward forecast
+        // is a meaningful "trending back to the historical average" signal and must be rendered.
+        $forecastData = (new ForecastBuilder())->build(
+            ['Bounce rate' => [20.0, 80.0]],
+            $dataTables,
+            [
+                ArchiveState::COMPLETE,
+                ArchiveState::INCOMPLETE,
+            ],
+            ['Bounce rate' => '%']
+        );
+
+        self::assertSame([[null, 20.0]], $forecastData);
+    }
+
+    public function testBuildLowerIsBetterSeriesAllowsDownwardForecastViaFlag(): void
+    {
+        $site = $this->createSiteMock();
+
+        $dataTables = [
+            $this->createDataTableForDay('2026-04-10', $site),
+            $this->createDataTableForDay('2026-04-17', $site, '2026-04-17 12:00:00'),
+        ];
+
+        // avg_time_on_page is lower-is-better but does not carry a percent unit. The data
+        // generator marks it as allowing a downward forecast via the per-series flag, and the
+        // builder must honour that without falling back to count-style suppression.
+        $forecastData = (new ForecastBuilder())->build(
+            ['Avg time on page' => [12.0, 90.0]],
+            $dataTables,
+            [
+                ArchiveState::COMPLETE,
+                ArchiveState::INCOMPLETE,
+            ],
+            ['Avg time on page' => 's'],
+            [],
+            ['Avg time on page' => true]
+        );
+
+        self::assertSame([[null, 12.0]], $forecastData);
+    }
+
+    public function testBuildLowerIsBetterFallsBackToPreviousForecastWhenNoPriorAvailable(): void
+    {
+        $site = $this->createSiteMock();
+
+        // Two consecutive incomplete days with no complete history at all: the first incomplete
+        // tick has no prior to draw from and must yield null; the second can carry the first
+        // forecast forward only once it is set, otherwise both stay null.
+        $dataTables = [
+            $this->createDataTableForDay('2026-04-17', $site, '2026-04-17 12:00:00'),
+            $this->createDataTableForDay('2026-04-18', $site, '2026-04-18 12:00:00'),
+        ];
+
+        $forecastData = (new ForecastBuilder())->build(
+            ['Bounce rate' => [10.0, 30.0]],
+            $dataTables,
+            [
+                ArchiveState::INCOMPLETE,
+                ArchiveState::INCOMPLETE,
+            ],
+            ['Bounce rate' => '%']
+        );
+
+        self::assertSame([[null, null]], $forecastData);
     }
 
     public function testBuildDoesNotUseSyntheticZeroAsPercentForecastSeed(): void
