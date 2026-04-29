@@ -164,24 +164,18 @@ jobs:
           submodules: true
           path: matomo
           ref: ${{ inputs.ref || github.ref }}
-      - name: Prepare system test bucket
+      - name: Prepare system test selection
         run: |
-          bucket_path="matomo/${{ matrix['bucket-path'] }}"
-          rm -rf "$bucket_path"
-          mkdir -p "$bucket_path"
+          keep_file="$(mktemp)"
+          printf '%s\n' ${{ matrix['bucket-source-roots'] }} > "$keep_file"
 
-          for source_root in ${{ matrix['bucket-source-roots'] }}; do
-            plugin_name="$(echo "$source_root" | cut -d/ -f2)"
-            tests_root_name="$(basename "$source_root")"
-            destination_parent="$bucket_path/plugins/$plugin_name"
+          for candidate in matomo/plugins/*/tests matomo/plugins/*/Test; do
+            [ -d "$candidate" ] || continue
+            relative_path="${candidate#matomo/}"
 
-            mkdir -p "$destination_parent"
-            cp -R "matomo/$source_root" "$destination_parent/$tests_root_name"
-            rm -rf \
-              "$destination_parent/$tests_root_name/Integration" \
-              "$destination_parent/$tests_root_name/Unit" \
-              "$destination_parent/$tests_root_name/UI" \
-              "$destination_parent/$tests_root_name/javascript"
+            if ! grep -Fxq "$relative_path" "$keep_file"; then
+              rm -rf "$candidate"
+            fi
           done
       - name: running tests
         uses: matomo-org/github-action-tests@main
@@ -191,7 +185,6 @@ jobs:
           mysql-engine: ${{ matrix['mysql-engine'] }}
           mysql-version: ${{ matrix['mysql-version'] }}
           php-version: ${{ matrix.php }}
-          phpunit-test-options: ${{ matrix['bucket-path'] }}
           redis-service: true
           artifacts-pass: ${{ secrets.ARTIFACTS_PASS }}
           upload-artifacts: ${{ matrix.php == '7.2' }}
@@ -215,36 +208,30 @@ jobs:
           submodules: true
           path: matomo
           ref: ${{ inputs.ref || github.ref }}
-      - name: Prepare integration core bucket
+      - name: Prepare integration core selection
         run: |
-          bucket_path="matomo/${{ matrix['bucket-path'] }}"
-          integration_root="$bucket_path/tests/PHPUnit/Integration"
-
-          rm -rf "$bucket_path"
-          mkdir -p "$integration_root"
-          ln -s "$PWD/matomo/core" "$bucket_path/core"
-
-          rsync -a \
-            --prune-empty-dirs \
-            --include '*/' \
-            --exclude '*Test.php' \
-            matomo/tests/PHPUnit/Integration/ \
-            "$integration_root/"
-
-          while IFS= read -r source_path; do
-            [ -n "$source_path" ] || continue
-
-            destination_path="$bucket_path/$source_path"
-            mkdir -p "$(dirname "$destination_path")"
-
-            if [ -d "matomo/$source_path" ]; then
-              cp -R "matomo/$source_path" "$destination_path"
-            else
-              cp "matomo/$source_path" "$destination_path"
-            fi
-          done <<'EOF'
+          keep_file="$(mktemp)"
+          cat <<'EOF' > "$keep_file"
           ${{ matrix['bucket-unit-paths'] }}
           EOF
+
+          for candidate in matomo/tests/PHPUnit/Integration/*; do
+            [ -e "$candidate" ] || continue
+            relative_path="${candidate#matomo/}"
+
+            if ! grep -Fxq "$relative_path" "$keep_file"; then
+              rm -rf "$candidate"
+            fi
+          done
+
+          for candidate in matomo/tests/resources/custompluginsdir/*/tests/Integration; do
+            [ -d "$candidate" ] || continue
+            relative_path="${candidate#matomo/}"
+
+            if ! grep -Fxq "$relative_path" "$keep_file"; then
+              rm -rf "$candidate"
+            fi
+          done
       - name: running tests
         uses: matomo-org/github-action-tests@main
         with:
@@ -253,7 +240,6 @@ jobs:
           mysql-engine: ${{ matrix['mysql-engine'] }}
           mysql-version: ${{ matrix['mysql-version'] }}
           php-version: ${{ matrix.php }}
-          phpunit-test-options: ${{ matrix['bucket-path'] }}
           redis-service: true
           testomatio: ${{ secrets.TESTOMATIO_INTEGRATION }}
           testomatio-force-report: ${{ contains('schedule,push', github.event_name) && github.run_attempt < 2 }}
@@ -276,24 +262,18 @@ jobs:
           submodules: true
           path: matomo
           ref: ${{ inputs.ref || github.ref }}
-      - name: Prepare integration test bucket
+      - name: Prepare integration test selection
         run: |
-          bucket_path="matomo/${{ matrix['bucket-path'] }}"
-          rm -rf "$bucket_path"
-          mkdir -p "$bucket_path"
+          keep_file="$(mktemp)"
+          printf '%s\n' ${{ matrix['phpunit-paths'] }} > "$keep_file"
 
-          for source_root in ${{ matrix['bucket-source-roots'] }}; do
-            plugin_name="$(echo "$source_root" | cut -d/ -f2)"
-            tests_root_name="$(basename "$source_root")"
-            destination_parent="$bucket_path/plugins/$plugin_name"
+          for candidate in matomo/plugins/*/tests/Integration matomo/plugins/*/Test/Integration; do
+            [ -d "$candidate" ] || continue
+            relative_path="${candidate#matomo/}/"
 
-            mkdir -p "$destination_parent"
-            cp -R "matomo/$source_root" "$destination_parent/$tests_root_name"
-            rm -rf \
-              "$destination_parent/$tests_root_name/System" \
-              "$destination_parent/$tests_root_name/Unit" \
-              "$destination_parent/$tests_root_name/UI" \
-              "$destination_parent/$tests_root_name/javascript"
+            if ! grep -Fxq "$relative_path" "$keep_file"; then
+              rm -rf "$candidate"
+            fi
           done
       - name: running tests
         uses: matomo-org/github-action-tests@main
@@ -303,7 +283,6 @@ jobs:
           mysql-engine: ${{ matrix['mysql-engine'] }}
           mysql-version: ${{ matrix['mysql-version'] }}
           php-version: ${{ matrix.php }}
-          phpunit-test-options: ${{ matrix['bucket-path'] }}
           redis-service: true
           testomatio: ${{ secrets.TESTOMATIO_INTEGRATION }}
           testomatio-force-report: ${{ contains('schedule,push', github.event_name) && github.run_attempt < 2 }}
