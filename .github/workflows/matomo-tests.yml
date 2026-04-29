@@ -222,6 +222,7 @@ jobs:
 
           rm -rf "$bucket_path"
           mkdir -p "$integration_root"
+          ln -s "$PWD/matomo/core" "$bucket_path/core"
 
           rsync -a \
             --prune-empty-dirs \
