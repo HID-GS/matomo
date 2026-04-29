@@ -174,7 +174,13 @@ jobs:
             relative_path="${candidate#matomo/}"
 
             if ! grep -Fxq "$relative_path" "$keep_file"; then
-              rm -rf "$candidate"
+              rm -rf "$candidate/System"
+
+              find "$candidate" -type f -name '*Test.php' \
+                ! -path "$candidate/Integration/*" \
+                ! -path "$candidate/Unit/*" \
+                ! -path "$candidate/UI/*" \
+                -delete
             fi
           done
       - name: running tests
