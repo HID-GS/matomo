@@ -140,6 +140,28 @@ def get_ui_suite_info(plugin_dir: Path) -> tuple[str, int] | None:
     return None
 
 
+def discover_core_integration_units(repo_root: Path) -> list[tuple[str, str, int]]:
+    units: list[tuple[str, str, int]] = []
+    integration_root = repo_root / "tests" / "PHPUnit" / "Integration"
+
+    for path in sorted(integration_root.iterdir(), key=lambda item: item.name):
+        relative_path = path.relative_to(repo_root).as_posix()
+        if path.is_dir():
+            test_count = count_matching_files(path, (".php",), set(), "Test.php")
+            if test_count:
+                units.append((path.name, relative_path, test_count))
+        elif path.is_file() and path.name.endswith("Test.php"):
+            units.append((path.name, relative_path, 1))
+
+    custom_plugin_roots = sorted((repo_root / "tests" / "resources" / "custompluginsdir").glob("*/tests/Integration"))
+    for path in custom_plugin_roots:
+        test_count = count_matching_files(path, (".php",), set(), "Test.php")
+        if test_count:
+            units.append((path.parts[-3], path.relative_to(repo_root).as_posix(), test_count))
+
+    return units
+
+
 def bucket_suite_rows(
     plugins: Iterable[tuple[str, str, str, int]], bucket_count: int, suite_name: str
 ) -> list[dict]:
@@ -173,6 +195,37 @@ def bucket_suite_rows(
     ]
 
 
+def bucket_core_suite_rows(
+    units: Iterable[tuple[str, str, int]], bucket_count: int, suite_name: str
+) -> list[dict]:
+    units = sorted(units, key=lambda unit: (-unit[2], unit[0]))
+    if not units:
+        return []
+
+    bucket_count = max(1, min(bucket_count, len(units)))
+    buckets = [{"weight": 0, "units": [], "paths": []} for _ in range(bucket_count)]
+
+    for label, relative_path, weight in units:
+        bucket = min(buckets, key=lambda item: (item["weight"], len(item["units"])))
+        bucket["weight"] += max(weight, 1)
+        bucket["units"].append(label)
+        bucket["paths"].append(relative_path)
+
+    non_empty_buckets = [bucket for bucket in buckets if bucket["units"]]
+    total_buckets = len(non_empty_buckets)
+
+    return [
+        {
+            "bucket-label": f"bucket-{index:02d}-of-{total_buckets:02d}",
+            "bucket-path": f"tmp/github-action-test-buckets/{suite_name}/bucket-{index:02d}",
+            "bucket-weight": bucket["weight"],
+            "bucket-units": " | ".join(bucket["units"]),
+            "bucket-unit-paths": "\n".join(bucket["paths"]),
+        }
+        for index, bucket in enumerate(non_empty_buckets, start=1)
+    ]
+
+
 def build_php_bucket_rows(
     buckets: Iterable[dict], php_environments: list[dict]
 ) -> list[dict]:
@@ -187,6 +240,28 @@ def build_php_bucket_rows(
                     "plugins": bucket["plugins"],
                     "phpunit-paths": bucket["phpunit-paths"],
                     "bucket-source-roots": bucket["bucket-source-roots"],
+                    "php": environment["php"],
+                    "adapter": environment["adapter"],
+                    "mysql-engine": environment["mysql-engine"],
+                    "mysql-version": environment["mysql-version"],
+                }
+            )
+    return rows
+
+
+def build_php_core_bucket_rows(
+    buckets: Iterable[dict], php_environments: list[dict]
+) -> list[dict]:
+    rows = []
+    for bucket in buckets:
+        for environment in php_environments:
+            rows.append(
+                {
+                    "bucket-label": bucket["bucket-label"],
+                    "bucket-path": bucket["bucket-path"],
+                    "bucket-weight": bucket["bucket-weight"],
+                    "bucket-units": bucket["bucket-units"],
+                    "bucket-unit-paths": bucket["bucket-unit-paths"],
                     "php": environment["php"],
                     "adapter": environment["adapter"],
                     "mysql-engine": environment["mysql-engine"],
@@ -235,6 +310,7 @@ def main() -> int:
     parser.add_argument("--repo-root", required=True)
     parser.add_argument("--ui-core-group-count", required=True, type=int)
     parser.add_argument("--system-plugin-bucket-count", required=True, type=int)
+    parser.add_argument("--integration-core-bucket-count", required=True, type=int)
     parser.add_argument("--integration-plugin-bucket-count", required=True, type=int)
     args = parser.parse_args()
 
@@ -242,6 +318,7 @@ def main() -> int:
     plugins_root = repo_root / "plugins"
     php_environments = load_php_environments(os.environ["PHP_TEST_ENVIRONMENTS"])
     bundled_plugins = get_bundled_plugins(repo_root)
+    core_integration_units = discover_core_integration_units(repo_root)
 
     plugins = [plugin for plugin in list_plugins(plugins_root) if plugin.name in bundled_plugins]
     system_plugins = []
@@ -269,6 +346,9 @@ def main() -> int:
     integration_plugin_buckets = bucket_suite_rows(
         integration_plugins, args.integration_plugin_bucket_count, "integration"
     )
+    integration_core_buckets = bucket_core_suite_rows(
+        core_integration_units, args.integration_core_bucket_count, "integration-core"
+    )
 
     outputs = {
         "unit_matrix": build_core_rows(php_environments),
@@ -276,7 +356,9 @@ def main() -> int:
         "system_plugins_matrix": build_php_bucket_rows(
             system_plugin_buckets, php_environments
         ),
-        "integration_core_matrix": build_core_rows(php_environments),
+        "integration_core_matrix": build_php_core_bucket_rows(
+            integration_core_buckets, php_environments
+        ),
         "integration_plugins_matrix": build_php_bucket_rows(
             integration_plugin_buckets, php_environments
         ),

@@ -85,7 +85,7 @@ jobs:
           ref: ${{ inputs.ref || github.ref }}
       - name: Generate test matrices
         id: generate
-        run: python3 matomo/.github/scripts/generate_matomo_test_matrices.py --repo-root matomo --ui-core-group-count "${{ vars.UI_CORE_GROUP_COUNT || 6 }}" --system-plugin-bucket-count "${{ vars.SYSTEM_PLUGIN_BUCKET_COUNT || 12 }}" --integration-plugin-bucket-count "${{ vars.INTEGRATION_PLUGIN_BUCKET_COUNT || 10 }}"
+        run: python3 matomo/.github/scripts/generate_matomo_test_matrices.py --repo-root matomo --ui-core-group-count "${{ vars.UI_CORE_GROUP_COUNT || 6 }}" --system-plugin-bucket-count "${{ vars.SYSTEM_PLUGIN_BUCKET_COUNT || 12 }}" --integration-core-bucket-count "${{ vars.INTEGRATION_CORE_BUCKET_COUNT || 2 }}" --integration-plugin-bucket-count "${{ vars.INTEGRATION_PLUGIN_BUCKET_COUNT || 10 }}"
 
   UnitTests:
     runs-on: ubuntu-24.04
@@ -199,6 +199,7 @@ jobs:
           testomatio-force-report: ${{ contains('schedule,push', github.event_name) && github.run_attempt < 2 }}
 
   IntegrationTestsCore:
+    name: IntegrationTestsCore (${{ matrix['bucket-label'] }}, ${{ matrix.php }}, ${{ matrix.adapter }}, ${{ matrix['mysql-engine'] }}, ${{ matrix['mysql-version'] }})
     runs-on: ubuntu-24.04
     needs: generate-matrices
     strategy:
@@ -214,6 +215,35 @@ jobs:
           submodules: true
           path: matomo
           ref: ${{ inputs.ref || github.ref }}
+      - name: Prepare integration core bucket
+        run: |
+          bucket_path="matomo/${{ matrix['bucket-path'] }}"
+          integration_root="$bucket_path/tests/PHPUnit/Integration"
+
+          rm -rf "$bucket_path"
+          mkdir -p "$integration_root"
+
+          rsync -a \
+            --prune-empty-dirs \
+            --include '*/' \
+            --exclude '*Test.php' \
+            matomo/tests/PHPUnit/Integration/ \
+            "$integration_root/"
+
+          while IFS= read -r source_path; do
+            [ -n "$source_path" ] || continue
+
+            destination_path="$bucket_path/$source_path"
+            mkdir -p "$(dirname "$destination_path")"
+
+            if [ -d "matomo/$source_path" ]; then
+              cp -R "matomo/$source_path" "$destination_path"
+            else
+              cp "matomo/$source_path" "$destination_path"
+            fi
+          done <<'EOF'
+          ${{ matrix['bucket-unit-paths'] }}
+          EOF
       - name: running tests
         uses: matomo-org/github-action-tests@main
         with:
@@ -222,6 +252,7 @@ jobs:
           mysql-engine: ${{ matrix['mysql-engine'] }}
           mysql-version: ${{ matrix['mysql-version'] }}
           php-version: ${{ matrix.php }}
+          phpunit-test-options: ${{ matrix['bucket-path'] }}
           redis-service: true
           testomatio: ${{ secrets.TESTOMATIO_INTEGRATION }}
           testomatio-force-report: ${{ contains('schedule,push', github.event_name) && github.run_attempt < 2 }}
@@ -349,7 +380,7 @@ jobs:
     if: ${{ needs.generate-matrices.outputs.ui_plugins_count != '0' }}
     strategy:
       fail-fast: ${{ inputs.is_preview == true }}
-      max-parallel: ${{ vars.MAX_PARALLEL_UI_PLUGINS || 15 }}
+      max-parallel: ${{ vars.MAX_PARALLEL_UI_PLUGINS || 20 }}
       matrix:
         include: ${{ fromJson(needs.generate-matrices.outputs.ui_plugins_matrix) }}
     steps:
