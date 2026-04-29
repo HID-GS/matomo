@@ -168,18 +168,30 @@ jobs:
         run: |
           keep_file="$(mktemp)"
           printf '%s\n' ${{ matrix['bucket-source-roots'] }} > "$keep_file"
+          selected_plugins='${{ matrix.plugins }}'
 
           for candidate in matomo/plugins/*/tests matomo/plugins/*/Test; do
             [ -d "$candidate" ] || continue
             relative_path="${candidate#matomo/}"
 
             if ! grep -Fxq "$relative_path" "$keep_file"; then
-              rm -rf "$candidate/System"
+              preserve_provider_dependency_test=false
+              if [ "$selected_plugins" != "${selected_plugins#*TestRunner}" ] && [ "$relative_path" = "plugins/Provider/tests" ]; then
+                preserve_provider_dependency_test=true
+              fi
+
+              if [ "$preserve_provider_dependency_test" = true ] && [ -d "$candidate/System" ]; then
+                find "$candidate/System" -type f ! -name 'CheckDirectDependencyUseCommandTest.php' -delete
+                find "$candidate/System" -depth -type d -empty -delete
+              else
+                rm -rf "$candidate/System"
+              fi
 
               find "$candidate" -type f -name '*Test.php' \
                 ! -path "$candidate/Integration/*" \
                 ! -path "$candidate/Unit/*" \
                 ! -path "$candidate/UI/*" \
+                ! -path "$candidate/System/CheckDirectDependencyUseCommandTest.php" \
                 -delete
             fi
           done
