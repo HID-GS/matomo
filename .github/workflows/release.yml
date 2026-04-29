@@ -73,6 +73,7 @@ jobs:
         with:
           lfs: false
           ref: ${{ inputs.ref || github.ref }}
+          persist-credentials: false
       - name: Import GPG key
         id: import_gpg
         run: |
@@ -138,7 +139,7 @@ jobs:
             echo "Creating a tag for $version"
 
             git tag $version
-            git push origin tags/$version
+            git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}" tags/$version
 
             echo "update=false" >> $GITHUB_OUTPUT
           fi
