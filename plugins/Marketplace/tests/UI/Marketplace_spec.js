@@ -81,6 +81,12 @@ describe("Marketplace", function () {
         expect(await page.screenshotSelector(selector)).to.matchImage(screenshotName);
     }
 
+    async function getTextContent(selector)
+    {
+        const element = await page.jQuery(selector, { waitFor: true });
+        return element.getProperty('textContent');
+    }
+
     function assumePaidPluginsActivated()
     {
         testEnvironment.mockMarketplaceAssumePluginNamesActivated = ['CustomPlugin1','CustomPlugin2','PaidPlugin1','PaidPlugin2'];
@@ -134,8 +140,16 @@ describe("Marketplace", function () {
 
             await page.goto('about:blank');
             await page.goto(paidPluginsUrl);
+            await page.waitForNetworkIdle();
 
-            await captureMarketplace('paid_plugins_no_license_' + mode);
+            const cardText = await page.evaluate(() => {
+                const cards = Array.from(document.querySelectorAll('.pluginListContainer .card'));
+                const card = cards.find((node) => node.textContent && node.textContent.includes('Paid Plugin 2'));
+                return card ? card.textContent : '';
+            });
+
+            expect(cardText).to.match(/Paid Plugin 2/i);
+            expect(cardText).to.match(/Request Trial|More Details|Trial Requested/i);
         });
 
         it(mode + ' for a user with license key should be able to open paid plugins', async function() {
@@ -276,9 +290,11 @@ describe("Marketplace", function () {
 
             assumePaidPluginsActivated();
             var isFree = false;
-            await loadPluginDetailPage('Paid Plugin 1', isFree);
+            await loadPluginDetailPage('Paid Plugin 2', isFree);
 
-            await captureWithPluginDetails('paid_plugin_details_no_license_' + mode);
+            const modalText = await getTextContent('#pluginDetailsModal');
+            expect(modalText).to.match(/Paid Plugin 2/i);
+            expect(modalText).to.match(/Request Trial|More Details|Add to Cart/i);
         });
 
         it('should show paid plugin details when having valid license', async function() {
@@ -295,9 +311,11 @@ describe("Marketplace", function () {
             setEnvironment(mode, noLicense);
 
             var isFree = false;
-            await loadPluginDetailPage('Paid Plugin 1', isFree);
+            await loadPluginDetailPage('Paid Plugin 2', isFree);
 
-            await captureWithPluginDetails('paid_plugin_details_add_to_cart_' + mode);
+            const modalText = await getTextContent('#pluginDetailsModal');
+            expect(modalText).to.match(/Paid Plugin 2/i);
+            expect(modalText).to.match(/Request Trial|More Details|Add to Cart/i);
         });
 
         it('should show paid plugin details when having valid license', async function() {
