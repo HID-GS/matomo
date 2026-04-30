@@ -99,8 +99,8 @@ describe("Dashboard", function () {
       await page.waitForSelector('.widget');
       await page.waitForNetworkIdle();
 
-      const pageWrap = await page.$('.pageWrap');
-      expect(await pageWrap.screenshot()).to.matchImage('dashboard1_anonymous');
+      const pageContent = await page.$('.layoutWithSidebarContent');
+      expect(await pageContent.screenshot()).to.matchImage('anonymous_dashboard1_anonymous');
     });
   });
 
