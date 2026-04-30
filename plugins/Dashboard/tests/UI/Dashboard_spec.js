@@ -77,6 +77,33 @@ describe("Dashboard", function () {
     expect(await pageWrap.screenshot()).to.matchImage('dashboard5');
   });
 
+  describe('As anonymous user', function () {
+    before(async function () {
+      await testEnvironment.callApi('UsersManager.setUserAccess', {
+        userLogin: 'anonymous',
+        access: 'view',
+        idSites: [1],
+      });
+      testEnvironment.testUseMockAuth = 0;
+      await testEnvironment.save();
+    });
+
+    after(async function () {
+      testEnvironment.testUseMockAuth = 1;
+      await testEnvironment.save();
+    });
+
+    it.only('dashboard looks ok for anonymous user', async function () {
+      await page.goto("?" + urlBase + "#?" + generalParams + "&category=Dashboard_Dashboard&subcategory=1");
+      await page.waitForSelector('#dashboard');
+      await page.waitForSelector('.widget');
+      await page.waitForNetworkIdle();
+
+      const pageWrap = await page.$('.pageWrap');
+      expect(await pageWrap.screenshot()).to.matchImage('dashboard1_anonymous');
+    });
+  });
+
   it("should display dashboard correctly on a mobile phone", async function () {
     await page.webpage.setViewport({
       width: 480,
