@@ -94,13 +94,14 @@ describe("Dashboard", function () {
     });
 
     it('dashboard looks ok for anonymous user', async function () {
+      // deviceScaleFactor: 2 is required to reproduce the narrow-layout bug fixed in #24444
+      await page.webpage.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 2 });
       await page.goto("?" + urlBase + "#?" + generalParams + "&category=Dashboard_Dashboard&subcategory=1");
       await page.waitForSelector('#dashboard');
       await page.waitForSelector('.widget');
       await page.waitForNetworkIdle();
 
-      const pageContent = await page.$('.layoutWithSidebarContent');
-      expect(await pageContent.screenshot()).to.matchImage('anonymous_dashboard1_anonymous');
+      expect(await page.screenshot({ fullPage: true })).to.matchImage('dashboard1_anonymous');
     });
   });
 
