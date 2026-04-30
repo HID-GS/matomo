@@ -77,7 +77,7 @@ describe("Dashboard", function () {
     expect(await pageWrap.screenshot()).to.matchImage('dashboard5');
   });
 
-  describe('As anonymous user', function () {
+  describe('anonymous', function () {
     before(async function () {
       await testEnvironment.callApi('UsersManager.setUserAccess', {
         userLogin: 'anonymous',
@@ -93,7 +93,7 @@ describe("Dashboard", function () {
       await testEnvironment.save();
     });
 
-    it.only('dashboard looks ok for anonymous user', async function () {
+    it('dashboard looks ok for anonymous user', async function () {
       await page.goto("?" + urlBase + "#?" + generalParams + "&category=Dashboard_Dashboard&subcategory=1");
       await page.waitForSelector('#dashboard');
       await page.waitForSelector('.widget');
