@@ -1,5 +1,9 @@
 ## Changelog
 
+5.5.2 - 2026-05-14
+- Upgrade php-saml to 4.3.2 which uses xmlseclibs 3.1.5 due CVE-2026-32313 
+- Added code to always ask for password confirmation if setting enabled
+
 5.5.1 - 2026-05-11
 - Update core version check
 

@@ -1,6 +1,6 @@
 {
   "name": "LoginSaml",
-  "version": "5.5.1",
+  "version": "5.5.2",
   "description": "Provides SAML-based Single Sign-On (SSO) support for Matomo. Works with any Identity Provider (IdP) such as OneLogin, Microsoft Entra ID, Google, and Salesforce. Try now for free.",
   "theme": false,
   "require": {

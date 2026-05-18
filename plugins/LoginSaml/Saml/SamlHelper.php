@@ -18,6 +18,7 @@ namespace Piwik\Plugins\LoginSaml\Saml;
 
 use Piwik\Date;
 use Piwik\Plugins\Login\PasswordVerifier;
+use Piwik\Plugins\LoginSaml\Config;
 use Piwik\Session\SessionNamespace;
 
 /**
@@ -29,17 +30,7 @@ class SamlHelper
 {
     public static function checkIfRequiresConfirmation()
     {
-        $requiresPasswordConfirmation = true;
-        $sessionNamespace = new SessionNamespace('Login');
-        if (!empty($sessionNamespace->lastPasswordAuth)) {
-            $lastAuthValidTo = Date::factory($sessionNamespace->lastPasswordAuth)->addPeriod(PasswordVerifier::VERIFY_VALID_FOR_MINUTES, 'minute');
-            $now = Date::now()->addPeriod(PasswordVerifier::VERIFY_REVALIDATE_X_MINUTES_LEFT, 'minute');
-            if ($lastAuthValidTo && $now->isEarlier($lastAuthValidTo)) {
-                $requiresPasswordConfirmation = false;
-            }
-        }
-
-        return $requiresPasswordConfirmation;
+        return (bool) Config::getConfigOption('enable_password_confirmation');
     }
 
     public static function setPasswordVerifiedCorrectly($redirectParams = [])

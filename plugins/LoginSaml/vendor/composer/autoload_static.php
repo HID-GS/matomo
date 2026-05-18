@@ -7,22 +7,22 @@ namespace Composer\Autoload;
 class ComposerStaticInitp99263c668419dee266a5b986f5f27eb2
 {
     public static $prefixLengthsPsr4 = array (
-        'R' =>
+        'R' => 
         array (
             'RobRichards\\XMLSecLibs\\' => 23,
         ),
-        'O' =>
+        'O' => 
         array (
             'OneLogin\\' => 9,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'RobRichards\\XMLSecLibs\\' =>
+        'RobRichards\\XMLSecLibs\\' => 
         array (
             0 => __DIR__ . '/..' . '/robrichards/xmlseclibs/src',
         ),
-        'OneLogin\\' =>
+        'OneLogin\\' => 
         array (
             0 => __DIR__ . '/..' . '/onelogin/php-saml/src',
         ),
