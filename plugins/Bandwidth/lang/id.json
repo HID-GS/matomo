@@ -1,0 +1,14 @@
+{
+    "Bandwidth": {
+        "Bandwidth": "Lebar pita",
+        "ColumnAvgBandwidth": "Rata-rata Lebar pita",
+        "ColumnHitsWithBandwidth": "Hit terekam dengan Lebar pita",
+        "ColumnMaxBandwidth": "Lebar pita Maksimal",
+        "ColumnMinBandwidth": "Lebar pita minimal",
+        "ColumnSumBandwidth": "Jumlah Lebar pita",
+        "ColumnTotalDownloadBandwidth": "Unduhan Bita terkirim",
+        "ColumnTotalOverallBandwidth": "Total Bita terkirim",
+        "ColumnTotalPageviewBandwidth": "Bita halaman dikunjungi terkirim",
+        "SparklineTotalBandwidthDetails": "%s byte ditransfer secara keseluruhan"
+    }
+}

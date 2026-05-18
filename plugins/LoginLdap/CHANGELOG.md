@@ -1,0 +1,312 @@
+# LoginLdap Changelog
+
+#### LoginLdap 5.1.11 - 2026-05-11
+* Added code to not skip password confirmation check, if user is a non-ldap user and skip password confirmation is enabled.
+
+#### LoginLdap 5.1.10 - 2026-04-27
+* Updated API documentation
+
+#### LoginLdap 5.1.9 - 2026-04-13
+* Added more restrictive check in getSuperUserAccessFromSuperUserAttribute to determine superuser access 
+
+#### LoginLdap 5.1.8 - 2026-03-30
+* Fixes no session fingerprint on successful web server authentication
+
+#### LoginLdap 5.1.7 - 2026-03-02
+* Updated API documentation
+
+#### LoginLdap 5.1.6 - 2026-02-02
+* Fixes regression introduced in version 5.1.5 due to restrict actions
+* Use new session method to destroy all sessions on plugin deactivation
+
+#### LoginLdap 5.1.5 - 2026-01-27
+* Restrict isLDAPUser preference set only via internal methods and not via API
+* Set random token value on successful authenticate
+
+#### LoginLdap 5.1.4 - 2026-01-12
+* Added code to delete all the access if no access returned from Ldap and enable_synchronize_access_from_ldap=1
+
+#### LoginLdap 5.1.3 - 2025-07-07
+* Textual changes
+
+#### LoginLdap 5.1.2 - 2025-06-09
+* Fixed deprecation warning
+
+#### LoginLdap 5.1.1 - 2025-03-17
+* Adjust default port for ldaps protocol
+
+#### LoginLdap 5.1.0 - 2025-03-03
+* Corrects compatibility issue with Login plugin
+
+#### LoginLdap 5.0.7
+* Fixes for PHP 8.4
+
+#### LoginLdap 5.0.6
+* Added code to purge non existent LDAP users from DB
+* Added plugin category for Marketplace
+
+#### LoginLdap 5.0.5
+* Fixes for PHP 8.3 uri determination logic
+
+#### LoginLdap 5.0.4
+* Fixed archiving error due to logs being printed for non-archive requests
+
+#### LoginLdap 5.0.3
+* Added code to auto accept invitation if present
+
+#### LoginLdap 5.0.2
+* Added code to skip password confirmation for create token auth
+
+#### LoginLdap 5.0.1
+* Prefer using ellipsis over three dots
+
+#### LoginLdap 5.0.0
+* Compatibility with Matomo 5
+
+#### LoginLdap 4.7.3
+* Fixed migration script error for installs without prefix
+
+#### LoginLdap 4.7.2
+* Fixed _isLDAPUser option not being deleted from option table on user deletion.
+
+#### LoginLdap 4.7.1
+* Updated migration script to include only users synced in Matomo
+
+#### LoginLdap 4.7.0
+* Started using SHA-256 instead of MD5 encryption while hashing auth secret
+
+#### LoginLdap 4.6.0
+* Added option to disable/enable password confirmation.
+
+#### LoginLdap 4.5.6
+* Updated log level to debug from warning during random password generation for a user.
+
+#### LoginLdap 4.5.5
+* Allow single quote character in admin password, #308
+
+#### LoginLdap 4.5.4
+* Started replacing invalid characters from server name key before fetching from config
+
+#### LoginLdap 4.5.3
+* Added default value of servers as array instead of null
+
+#### LoginLdap 4.5.2
+* Started updating user password on sync for existing user if synchronize_users_after_login=1
+* Fix to add new user  during sync without password confirmation
+
+#### LoginLdap 4.5.1
+
+* Translation updates.
+
+#### LoginLdap 4.5.0
+
+* Migrate from AngularJS to Vue.
+
+#### LoginLdap 4.4.0
+
+* Fixed domain strip from login when equal to Domain\UserLogin.
+* Added Start TLS option per LDAP server (change by Tomolimo).
+
+#### LoginLdap 4.3.1
+
+* Fixed deprecation warning for PHP8.1.
+* Updated pronoun in text.
+
+#### LoginLdap 4.3.0
+
+* Added new setting for the Web Server Auth strategy to avoid stripping off the domain of usernames. (change by EmTeedee)
+
+#### LoginLdap 4.2.2
+
+* Fix issue with LDAP user login that caused password confirmation dialog to log users out temporarily.
+
+#### LoginLdap 4.2.1
+
+* Compatibility with matomo 4.0 and above.
+
+#### LoginLdap 4.2.0
+
+* Compatibility with matomo 4.0 and above.
+
+#### LoginLdap 4.0.8
+
+* Compatibility with matomo 3.10 and above.
+
+#### LoginLdap 4.0.7
+
+* Updated translations and Readme (no code change)
+
+#### LoginLdap 4.0.6
+
+* Make plugin compatible with latest Matomo version
+
+#### LoginLdap 4.0.4
+
+* Fixing bug that made it impossible to set append_user_email_suffix_to_username to 0 for appending username suffix to username for email and not during auth.
+
+#### LoginLdap 4.0.0
+
+* Compatibility with Piwik 3
+* Configuration value 'enable_random_token_auth_generation' has been removed as its obsolete with Piwik 3 having random auth tokens.
+* Command `loginldap:generate-token-auth` has been removed as auth tokens are independent from password now and new auth token can now be generated directly in user admin
+* Updated UI: Now completely works using AngularJS and material design
+
+#### LoginLdap 3.3.1
+
+* Plugin settings: clarify an inline help for `Use Web Server Auth (e.g. Kerberos SSO)`
+ 
+#### LoginLdap 3.3.0
+
+* Compatibility with Piwik 2.16.0
+
+#### LoginLdap 3.2.2
+
+* LDAP user can't change their passwords in Piwik's UI (passwords should be managed directly on LDAP host)
+
+#### LoginLdap 3.2.1
+
+* Configureed LDAP passwords are no longer stored in the HTML in the LDAP settings page. This is a minor security update.
+
+#### LoginLdap 3.2.0
+
+* Compatibility w/ Piwik 2.15.0
+
+#### LoginLdap 3.1.5
+
+* Fixing regression caused by Piwik 2.14 change: authenticating in tracker w/ token_auth no longer worked if LoginLdap was used.
+* Workaround issue where 'LDAP Functions are Missing' notification was never removed from the screen by making it transient & closeable.
+
+#### LoginLdap 3.1.2
+
+* Change placeholder value of server hostname config option and add a note so users can avoid the problem where ports are ignored when ldap:// URLs are used in the hostname option.
+* Make sure users upgrading from pre-3.0 versions set the correct LDAP settings.
+* Add documentation regarding using LoginLdap with Piwik's official mobile app.
+
+#### LoginLdap 3.1.1
+
+* Make plugin compatible with latest Piwik version.
+
+#### LoginLdap 3.1.0
+
+* add --skip-existing option to loginldap:synchronize-users command
+* warning displayed if Login + LoginLdap plugins are enabled at the same time
+* re-added the load ldap user form in the settings page
+* normal users can be managed when LdapAuth implementation is used (when Always Use LDAP for Authentication is checked)
+* fixed bug in web server auth strategy where LDAP auth was not used if REMOTE_USER var not found. made connecting via mobile app impossible.
+* fix bug in synchronizing users w/ user_email_suffix configured (first login worked, subsequent logins failed since username used in UserSynchronizer was incorrect)
+
+#### LoginLdap 3.0.0:
+
+* Automatic creation of Piwik users using LDAP (old 'auto create users' feature) is now standard.
+* Default access permissions can be specified for newly synchronized users.
+* Only super users are allowed to login w/o authenticating to LDAP now. Normal users stored in Piwik will not be allowed to authenticate if using LoginLdap.
+* It is possible now to test memberOf and filter settings from within the LDAP settings page.
+* Piwik access permissions can be specified from within LDAP using custom attributes.
+* It is allowed to specify multiple LDAP fallback servers. If one fails, the others are used.
+* Tests that make sure the PHP LDAP extension exists were fixed and also implemented in loginpage.
+* Special LDAP log was removed. Logging is done through Piwik\\Log now.
+* New setting for LDAP network timeout.
+* Menu entry is LDAP > Settings now instead of Manage > LDAP Users.
+* The synchronize single user feature in the settings page was removed.
+* Supports three types of authentication strategies.
+* Only compatible with Piwik 2.8 and above.
+
+#### LoginLdap 2.2.7:
+* Auto create users from LDAP #23
+
+#### LoginLdap 2.2.6:
+* Fixes empty characters
+
+#### LoginLdap 2.2.5:
+* Fixes issue #22 'unable to login'
+
+#### LoginLdap 2.2.4:
+* Added debug mode and more detail logging
+
+#### LoginLdap 2.2.3:
+* Fixes #21 Ensure all variables are correctly set
+* Storing log file in tmp/logs/ and fix PHP log read warning
+
+#### LoginLdap 2.2.2:
+* Adding missing namespace
+
+#### LoginLdap 2.2.1:
+* Controller now extends Login controller. Reusing assets and templates.
+
+#### LoginLdap 2.1.0:
+* Code updated to support Piwik 2.1 and newer
+
+#### LoginLdap 2.0.9:
+* Fixes Piwik #4001 Deprecate force_ssl_login setting
+
+#### LoginLdap 2.0.8:
+* Fixed issue #7 'Deinstallation not possible'
+
+#### LoginLdap 2.0.7:
+* Fixed issue #4 'useKerberos config problem'
+
+#### LoginLdap 2.0.6:
+* Tmuellerleile fixed default controller action
+
+#### LoginLdap 2.0.5:
+* Fixed issue with log file creation and reading
+
+#### LoginLdap 2.0.4:
+* Added 'View LDAP log from web as admin'
+* Added better error detection and check if LDAP is enabled in PHP
+
+#### LoginLdap 2.0.3:
+* Issue #26 Fixed 'malformed UTF8 in de.json'
+* Issue #28 Fixed 'plugin install should add parameters to config.ini.php'
+
+#### LoginLdap 2.0.2:
+* Added 'de' and 'et' translations
+* Minor code enhancements
+
+#### LoginLdap 2.0.1:
+* First public release in Piwik Marketplace
+
+#### LoginLdap 2.0.0:
+* First release for Piwik 2.0, may contain bugs!
+* Added LDAP server port configuration option
+
+#### LoginLdap 1.3.5:
+* Issue #20 Fixed 'kerberos is not working'
+* Issue #19 Fixed 'wrong version info'
+
+#### LoginLdap 1.3.4:
+* Issue #18 Fixed 'iconv() expects parameter 3 to be string array given'
+
+#### LoginLdap 1.3.3:
+* Issue #17 Fixed 'Undefined index: phpVersion'
+
+#### LoginLdap 1.3.2:
+* Issue #15 Fixed 'Setting a custom mail field has no effect'
+* Issue #16 Fixed 'Login fails because of non-UTF8 values passed to json_encode()'
+
+#### LoginLdap 1.3.1:
+* Issue #7 Added check on the activate handler to ensure the php-ldap extension is installed.
+* Issue #8 Only superuser can view (and modify) LDAP configuration
+* Issue #9 Fixed 'Undefined index: activeDirectory'
+* Issue #11 E-Mail Address Being Required
+* Issue #12 Fixed 'Undefined index: topMenu'
+* Issue #13 LDAP Users were not able login using the mobile app and using API in general as their credentials were not stored in the database.
+* Applied fix for Piwik Dev Zone Ticket #734: 'Correction added so Page Overlay feature works'.
+* Added functionality to ensure that the Login and LoginLDAP plugins are never enabled simultaneously.
+* Removed support for IE6.
+* Changed log file location so to be include into the plugin directory and more easy to find.
+
+#### LoginLdap 1.3.0:
+* Issue #1 Only superuser can modify LDAP configuration
+* Issue #2 LDAP search filters
+* Issue #3 Enable Kerberos login for piwik
+* Issue #4 You cannot login as superuser if LDAP connection fails
+* Issue #5 Add more LDAP logging options
+* Issue #6 Error while trying to read a specific config file entry 'LoginLdap'
+
+#### LoginLdap 1.2.0:
+* ActiveDirectory Support
+* Piwik >= 1.6 Install Bug Fix
+
+#### LoginLdap 1.0.0:
+* Initial Version just for plain anonymous Ldap
