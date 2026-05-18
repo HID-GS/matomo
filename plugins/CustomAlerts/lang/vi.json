@@ -1,0 +1,16 @@
+{
+    "CustomAlerts": {
+        "Alert": "Cảnh báo",
+        "Alerts": "Cảnh báo",
+        "Condition": "Điều kiện",
+        "CreateNewAlert": "Tạo cảnh báo mới",
+        "DayComparedToPreviousDay": "Ngày trước đó",
+        "MailAlertSubject": "Cảnh báo mới cho website %1$s [%2$s]",
+        "MediumEmail": "Email",
+        "MediumMobile": "Di động",
+        "OperationContains": "chứa",
+        "OperationDoesNotContain": "không chứa",
+        "PluginDescription": "Plugin Cảnh báo cho phép bạn định nghĩa các cảnh báo cho bất kỳ báo cáo hoặc dữ liệu nào.",
+        "SmsAlertFromName": "Cảnh báo mới"
+    }
+}

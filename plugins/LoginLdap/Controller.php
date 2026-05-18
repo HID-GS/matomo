@@ -1,0 +1,103 @@
+<?php
+
+/**
+ * Matomo - free/libre analytics platform
+ *
+ * @link https://matomo.org
+ * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
+ */
+
+namespace Piwik\Plugins\LoginLdap;
+
+use Exception;
+use Piwik\Notification;
+use Piwik\Option;
+use Piwik\Piwik;
+use Piwik\Plugin\ControllerAdmin;
+use Piwik\Plugins\LoginLdap\Ldap\ServerInfo;
+use Piwik\Plugins\LoginLdap\LdapInterop\UserMapper;
+use Piwik\View;
+
+/**
+ * Login controller
+ *
+ * @package Login
+ */
+class Controller extends \Piwik\Plugins\Login\Controller
+{
+    /**
+     * @return string
+     */
+    public function admin()
+    {
+        Piwik::checkUserHasSuperUserAccess();
+        $view = new View('@LoginLdap/index');
+
+        ControllerAdmin::setBasicVariablesAdminView($view);
+
+        if (!function_exists('ldap_connect')) {
+            $notification = new Notification(Piwik::translate('LoginLdap_LdapFunctionsMissing'));
+            $notification->context = Notification::CONTEXT_ERROR;
+            $notification->type = Notification::TYPE_TRANSIENT;
+            $notification->flags = 0;
+            Notification\Manager::notify('LoginLdap_LdapFunctionsMissing', $notification);
+        }
+
+        $this->setBasicVariablesView($view);
+
+        $serverNames = Config::getServerNameList() ?: array();
+
+        $view->servers = array();
+        if (empty($serverNames)) {
+            try {
+                $serverInfo = ServerInfo::makeFromOldConfig()->getProperties();
+                $serverInfo['name'] = 'server';
+                $view->servers[] = $serverInfo;
+            } catch (Exception $ex) {
+                // ignore
+            }
+        } else {
+            foreach ($serverNames as $server) {
+                $serverConfig = Config::getServerConfig($server);
+                if (!empty($serverConfig)) {
+                    $serverConfig['name'] = $server;
+                    $view->servers[] = $serverConfig;
+                }
+            }
+        }
+
+        // remove password field
+        foreach ($view->servers as &$serverInfo) {
+            unset($serverInfo['admin_pass']);
+        }
+
+        $view->ldapConfig = Config::getPluginOptionValuesWithDefaults();
+
+        $view->updatedFromPre30 = Option::get('LoginLdap_updatedFromPre3_0');
+
+        return $view->render();
+    }
+
+    public function confirmPassword()
+    {
+        $enablePasswordConfirmation = \Piwik\Plugins\LoginLdap\Config::getConfigOption('enable_password_confirmation');
+        if ($enablePasswordConfirmation || !$this->isCurrentUserLdapUser()) {
+            return parent::confirmPassword();
+        }
+        Piwik::checkUserIsNotAnonymous();
+        Piwik::checkUserHasSomeViewAccess();
+
+        $this->passwordVerify->setPasswordVerifiedCorrectly();
+    }
+
+    private function isCurrentUserLdapUser(): bool
+    {
+        $currentUserLogin = Piwik::getCurrentUserLogin();
+        if (empty($currentUserLogin)) {
+            return false;
+        }
+
+        $userMapper = new UserMapper();
+        return $userMapper->isUserLdapUser($currentUserLogin);
+    }
+}
