@@ -1,0 +1,24 @@
+{
+    "RollUpReporting": {
+        "AllMeasurablesAssigned": "Alla uppgifter har tilldelats denna Sammanställning. När du skapar nya uppgifter kommer de automatiskt att inkluderas i denna Sammanställning.",
+        "ErrorCannotAssignRollUpToAnotherRollUp": "Det går inte att ange Roll-Up idsite %1$s till denna Roll-Up eftersom Roll-Up idsite %2$s redan inkluderar den webbplats du just nu uppdaterar.",
+        "ErrorNoSiteAssigned": "Åtminstone en barn-webbplats behöver anges till en Roll-Up webbplats",
+        "FindMeasurables": "Hitta uppgifter",
+        "FunnelCreationNotPossible": "Det är inte möjligt att skapa en konverteringstratt för en Roll-Up webbplats",
+        "GoalCreationNotPossible": "Det är inte möjligt att skapa mål för en Roll-Up webbplats",
+        "MatchingSearchConfirmTitle": "Är du säker på att du vill lägga till %s som matchar uppgifterna?",
+        "MatchingSearchConfirmTitleAlreadyAdded": "%s matchande uppgifter har redan lagts till",
+        "MatchingSearchMatchedAdd": "Dessa %1$s uppgifter matchade %2$s och kommer läggas till på denna Roll-Up",
+        "MatchingSearchMatchedAlreadyAdded": "Dessa %1$s uppgifter matchade %2$s men är redan tillagda till denna sammanställning",
+        "MatchingSearchNotFound": "Det finns ingen uppgift som matchar sökfrasen %s.",
+        "NoMeasurableAssignedYet": "Inga uppgifter har tilldelats ännu, vänligen välj en uppgift från ovanstående alternativ.",
+        "PartialAccessNotificationMessage": "Du tittar för närvarande på besöksloggen för din Sammanställning %1$s, som endast visar data från de %2$s webbplatser du har åtkomst till (av totalt %3$s webbplatser i denna Sammanställning). Om du vill se besöksdata för alla webbplatser i denna Sammanställning, vänligen begär åtkomst från en administratör eller superanvändare. Var vänlig att notera att dina andra rapporter i Matomo inkluderar data från alla webbplatser inom denna Sammanställning.",
+        "RollUpMeasurableSettingHelp": "Definierar de uppgifter i källan som ska sammanställas för denna uppgift. För att lägga till ett uppgift (eller en webbplats) till denna sammanställning, välj en uppgift i uppgiftsväljaren. För att ta bort en uppgift, klicka på minusikonen bredvid webbplatsnamnet. Minst en uppgift måste vara kopplat till denna webbplats. E-handel och Webbplats-sökning aktiveras automatiskt om något av de tilldelade uppgifterna har e-handel eller webbplats-sök aktiverat. När du lägger till eller tar bort uppgifter vid ett senare tillfälle kan tidigare genererade rapporter behöva skapas på nytt.",
+        "RollUpMeasurableSettingTitle": "Källa för uppgifterna",
+        "RollUpSitePrefixName": "Sammanställning",
+        "SelectMeasurable": "Välj en uppgift att lägga till denna Roll-Up",
+        "SelectMeasurablesMatchingSearch": "eller lägg till alla uppgifter som innehåller följande sökfras",
+        "SystemSettingCreationDateSyncHelp": "När den är aktiverad kommer skapandedatumet för en Sammanställning automatiskt att sättas till skapandedatumet för den äldsta källuppgiften. Detta gör att du kan visa rapporter från tidigare för en Sammanställning efter att du har skapat den. Du kan vilja inaktivera den här inställningen om du har hög trafik och arkivering av dessa rapporter skulle ta för lång tid.",
+        "SystemSettingCreationDateSyncTitle": "Synkronisera skapandedatum"
+    }
+}

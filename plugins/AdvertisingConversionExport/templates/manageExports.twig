@@ -1,0 +1,17 @@
+
+<div
+  class="conversionExports"
+  vue-entry="AdvertisingConversionExport.ConversionExportManage"
+  export-types="{{ exportTypes|json_encode }}"
+  already-created-export-types="{{ alreadyCreatedExportTypes|json_encode }}"
+  click-id-providers="{{ clickIdProviders|json_encode }}"
+  attribution-models="{{ attributionModels|json_encode }}"
+  has-write-access="{{ (hasWriteAccess == 1)|json_encode }}"
+  days-to-look-back-min-value="{{ constant("Piwik\\Plugins\\AdvertisingConversionExport\\AdvertisingConversionExport::DAYS_TO_LOOK_BACK_MIN_VALUE")|json_encode }}"
+  days-to-look-back-max-value="{{ constant("Piwik\\Plugins\\AdvertisingConversionExport\\AdvertisingConversionExport::DAYS_TO_LOOK_BACK_MAX_VALUE")|json_encode }}"
+  days-to-export-min-value="{{ constant("Piwik\\Plugins\\AdvertisingConversionExport\\AdvertisingConversionExport::DAYS_TO_EXPORT_MIN_VALUE")|json_encode }}"
+  days-to-export-max-value="{{ constant("Piwik\\Plugins\\AdvertisingConversionExport\\AdvertisingConversionExport::DAYS_TO_EXPORT_MAX_VALUE")|json_encode }}"
+  attributed-credit-min-value="{{ constant("Piwik\\Plugins\\AdvertisingConversionExport\\AdvertisingConversionExport::ATTRIBUTED_CREDIT_MIN_VALUE")|json_encode }}"
+  attributed-credit-max-value="{{ constant("Piwik\\Plugins\\AdvertisingConversionExport\\AdvertisingConversionExport::ATTRIBUTED_CREDIT_MAX_VALUE")|json_encode }}"
+  is-export-disabled-by-policy="{{ isExportDisabledByPolicy|json_encode }}"
+></div>

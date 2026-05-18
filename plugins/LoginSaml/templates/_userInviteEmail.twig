@@ -1,0 +1,9 @@
+{% set closingHeadTag %}<code>{{ '</head>'|e('html') }}</code>{% endset %}
+
+<p>{{ 'General_HelloUser'|translate(login) }}</p>
+
+<p>{{ content|raw }}</p>
+
+{{ inviteLinks|raw }}
+
+<p>{{ notes }}</p>

@@ -1,0 +1,42 @@
+#loginSaml {
+  #orWrapper {
+    display: flex;
+    align-items: stretch; /* Equal height columns */
+    width: 100%;
+    margin-bottom: 10px;
+    margin-left: 0;
+    margin-right: 0;
+
+    p {
+      color: @color-silver-l60;
+      font-weight: 350;
+    }
+
+    .col {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .side {
+      flex: 1 1 0; /* Grow and shrink equally */
+      hr {
+        width: 100%;
+        border-top: 1px solid @color-silver-l60;
+        color: @color-silver-l60;
+      }
+    }
+
+    .center {
+      flex: 0 1 auto; /* Fit to content, no forced grow */
+    }
+  }
+}
+
+#loginSamlButton {
+  color: @color-green-matomo !important;
+  background-color: white;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  height: auto;
+}

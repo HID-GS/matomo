@@ -1,0 +1,23 @@
+{
+  "name": "LoginSaml",
+  "version": "5.5.1",
+  "description": "Provides SAML-based Single Sign-On (SSO) support for Matomo. Works with any Identity Provider (IdP) such as OneLogin, Microsoft Entra ID, Google, and Salesforce. Try now for free.",
+  "theme": false,
+  "require": {
+    "php": ">=7.3.0",
+    "matomo": ">=5.0.0-b1,<6.0.0-b1"
+  },
+  "authors": [
+    {
+      "name": "InnoCraft",
+      "email": "contact@innocraft.com",
+      "homepage": "https://www.innocraft.com"
+    }
+  ],
+  "price": {
+    "base": 550
+  },
+  "homepage": "https://plugins.matomo.org/LoginSaml",
+  "license": "InnoCraft EULA",
+  "keywords": ["sso", "saml", "ADFS", "OneLogin", "Okta", "Ping Identity", "Microsoft Entra ID", "Google", "Salesforce", "SharePoint", "Authentication", "Just-in-time provisioning"]
+}

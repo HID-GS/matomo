@@ -1,0 +1,30 @@
+{% set content %}
+    {% if hideLoginForm %}
+        <script>window.addEventListener("DOMContentLoaded", function () {$("#login_form").hide();})</script>
+    {% else %}
+        {% if not versionOlderThan5_4 %}
+            <div id="orWrapper" class="row">
+                <div class="col side"><hr /></div>
+                <div class="col center valign-wrapper"><p class="center-align">OR</p></div>
+                <div class="col side"><hr /></div>
+            </div>
+        {% endif %}
+    {% endif %}
+
+    {% if errorMessage %}
+        <div vue-entry="CoreHome.Notification" noclear="true" context="error">{{ errorMessage }}</div>
+    {% endif %}
+
+    <a id="loginSamlButton" class="btn btn-block" href="{{ samlLoginUrl }}">{{ samlButtonText}}</a>
+{% endset %}
+
+
+{% if versionOlderThan5_4 %}
+    {{ content }}
+    <br />
+    <br />
+{% else %}
+    <div id="loginSaml">
+        {{ content }}
+    </div>
+{% endif %}
