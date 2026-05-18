@@ -1,5 +1,9 @@
 ## Changelog
 
+5.0.13 - 2026-05-15
+- Fixed crash summary context showing undefined crash occurrence dates when visitor log data is unavailable
+- Fixes require md5 error, breaking tracking code
+
 5.0.12 - 2026-04-27
 - Updated API documentation
 

@@ -253,7 +253,7 @@ ${this.crashContextText}`;
 
         if (context.visit) {
           const occurrenceText = translate('CrashAnalytics_DateCrashOccurrence');
-          lines.push(`${occurrenceText}: ${context.visit.serverDatePretty} ${context.visit.serverTimePretty}`);
+          lines.push(`${occurrenceText}: ${context.serverTimePretty}`);
 
           visitInfoToDisplay.forEach(({ label, prop }) => {
             if (context.visit?.[prop]) {

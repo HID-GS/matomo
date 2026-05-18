@@ -218,7 +218,7 @@ external_CoreHome_["Matomo"].on('Live.initializeVisitorActions', elem => {
 // EXTERNAL MODULE: external {"commonjs":"vue","commonjs2":"vue","root":"Vue"}
 var external_commonjs_vue_commonjs2_vue_root_Vue_ = __webpack_require__("8bbf");
 
-// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/CrashAnalytics/vue/src/CrashDetails/CrashDetails.vue?vue&type=template&id=7c684082
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/CrashAnalytics/vue/src/CrashDetails/CrashDetails.vue?vue&type=template&id=7725559c
 
 const _hoisted_1 = {
   class: "crashDetails",
@@ -374,7 +374,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     value: _ctx.translate('General_No')
   }, null, 8, _hoisted_31)], 512)], 512);
 }
-// CONCATENATED MODULE: ./plugins/CrashAnalytics/vue/src/CrashDetails/CrashDetails.vue?vue&type=template&id=7c684082
+// CONCATENATED MODULE: ./plugins/CrashAnalytics/vue/src/CrashDetails/CrashDetails.vue?vue&type=template&id=7725559c
 
 // CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/CrashAnalytics/vue/src/CrashLog/CrashLog.vue?vue&type=template&id=395ccda0
 
@@ -1306,7 +1306,7 @@ ${this.crashContextText}`;
         const lines = [];
         if (context.visit) {
           const occurrenceText = Object(external_CoreHome_["translate"])('CrashAnalytics_DateCrashOccurrence');
-          lines.push(`${occurrenceText}: ${context.visit.serverDatePretty} ${context.visit.serverTimePretty}`);
+          lines.push(`${occurrenceText}: ${context.serverTimePretty}`);
           visitInfoToDisplay.forEach(({
             label,
             prop
