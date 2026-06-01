@@ -1,0 +1,601 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<result>
+	<row>
+		<name>Click</name>
+		<types>
+			<row>
+				<id>AllDownloadsClick</id>
+				<name>All Downloads Click</name>
+				<description>Triggered when a link is clicked which links to a downloadable file. It will be triggered on left, middle and right click.</description>
+				<category>Click</category>
+				<icon>plugins/TagManager/images/icons/pointer.svg</icon>
+				<help>Triggered when a user clicks on an &quot;A&quot; or &quot;AREA&quot; element and the link points to a file with a downloadable file extension. To enable tracking on specific click button, please add conditions based on a &quot;ClickButton&quot; variable in the advanced settings.</help>
+				<order>9999</order>
+				<contexts>
+					<row>web</row>
+				</contexts>
+				<hasAdvancedSettings>1</hasAdvancedSettings>
+				<isCustomTemplate>0</isCustomTemplate>
+				<parameters>
+					<row>
+						<name>downloadExtensions</name>
+						<title>Download Extensions</title>
+						<value>7z,aac,apk,arc,arj,asf,asx,avi,azw3,bin,csv,deb,dmg,doc,docx,epub,exe,flv,gif,gz,gzip,hqx,ibooks,jar,jpg,jpeg,js,mobi,mp2,mp3,mp4,mpg,mpeg,mov,movie,msi,msp,odb,odf,odg,ods,odt,ogg,ogv,pdf,phps,png,ppt,pptx,qt,qtm,ra,ram,rar,rpm,sea,sit,tar,tbz,tbz2,bz,bz2,tgz,torrent,txt,wav,wma,wmv,wpd,xls,xlsx,xml,z,zip</value>
+						<defaultValue>7z,aac,apk,arc,arj,asf,asx,avi,azw3,bin,csv,deb,dmg,doc,docx,epub,exe,flv,gif,gz,gzip,hqx,ibooks,jar,jpg,jpeg,js,mobi,mp2,mp3,mp4,mpg,mpeg,mov,movie,msi,msp,odb,odf,odg,ods,odt,ogg,ogv,pdf,phps,png,ppt,pptx,qt,qtm,ra,ram,rar,rpm,sea,sit,tar,tbz,tbz2,bz,bz2,tgz,torrent,txt,wav,wma,wmv,wpd,xls,xlsx,xml,z,zip</defaultValue>
+						<type>string</type>
+						<uiControl>text</uiControl>
+						<uiControlAttributes>
+							<placeholder>e.g. 7z,aac,apk,arc,arj,asf,asx,avi,azw3,bin,csv,deb,dm</placeholder>
+						</uiControlAttributes>
+						<availableValues />
+						<description>Comma separated list of file extensions which will be considered as a download.</description>
+						<inlineHelp />
+						<introduction />
+						<condition />
+						<fullWidth>0</fullWidth>
+					</row>
+				</parameters>
+			</row>
+			<row>
+				<id>AllElementsClick</id>
+				<name>All Elements Click</name>
+				<description>Triggered when any element is clicked. It will be triggered on left, middle and right click.</description>
+				<category>Click</category>
+				<icon>plugins/TagManager/images/icons/pointer.svg</icon>
+				<help>Triggered on any click on any element. To listen to clicks on specific elements or specific click button, please add conditions based on a &quot;Click&quot; variable or on a &quot;ClickButton&quot; variable in the advanced settings.</help>
+				<order>9999</order>
+				<contexts>
+					<row>web</row>
+				</contexts>
+				<hasAdvancedSettings>1</hasAdvancedSettings>
+				<isCustomTemplate>0</isCustomTemplate>
+				<parameters>
+				</parameters>
+			</row>
+			<row>
+				<id>AllLinksClick</id>
+				<name>All Links Click</name>
+				<description>Triggered when a link is clicked. It will be triggered on left, middle and right click.</description>
+				<category>Click</category>
+				<icon>plugins/TagManager/images/icons/pointer.svg</icon>
+				<help>Triggered on any click on any element. To listen to clicks on specific elements or specific click button, please add conditions based on a &quot;Click&quot; variable or on a &quot;ClickButton&quot; variable in the advanced settings.</help>
+				<order>9999</order>
+				<contexts>
+					<row>web</row>
+				</contexts>
+				<hasAdvancedSettings>1</hasAdvancedSettings>
+				<isCustomTemplate>0</isCustomTemplate>
+				<parameters>
+				</parameters>
+			</row>
+		</types>
+	</row>
+	<row>
+		<name>Pageview</name>
+		<types>
+			<row>
+				<id>DomReady</id>
+				<name>DOM Ready</name>
+				<description>Triggered as soon as all the HTML has been received and parsed.</description>
+				<category>Pageview</category>
+				<icon>plugins/TagManager/images/defaultIcon.svg</icon>
+				<help>At this stage of loading a web page only the HTML is loaded but not yet all images, StyleSheets, and JavaScript files. If you want to make sure the website is fully loaded, please consider the &quot;Window Loaded&quot; trigger.</help>
+				<order>9999</order>
+				<contexts>
+					<row>web</row>
+				</contexts>
+				<hasAdvancedSettings>1</hasAdvancedSettings>
+				<isCustomTemplate>0</isCustomTemplate>
+				<parameters>
+				</parameters>
+			</row>
+			<row>
+				<id>PageView</id>
+				<name>Pageview</name>
+				<description>Triggered as soon as the Tag Manager is executed within the page.</description>
+				<category>Pageview</category>
+				<icon>plugins/TagManager/images/icons/pageview.svg</icon>
+				<help>Triggered whenever a user visits a new page or reloads the current page. You can restrict this trigger by specifying conditions to control when tracking occurs.</help>
+				<order>9999</order>
+				<contexts>
+					<row>web</row>
+				</contexts>
+				<hasAdvancedSettings>1</hasAdvancedSettings>
+				<isCustomTemplate>0</isCustomTemplate>
+				<parameters>
+				</parameters>
+			</row>
+			<row>
+				<id>WindowLoaded</id>
+				<name>Window Loaded</name>
+				<description>Triggered when the page is fully loaded including all images etc.</description>
+				<category>Pageview</category>
+				<icon>plugins/TagManager/images/defaultIcon.svg</icon>
+				<help>This stage of loading a web page, is when the page is fully loaded according to the browser. In most cases this means that also all images are loaded, and all styles are applied etc. This trigger is always triggered at some point after the &quot;DOM Ready&quot;.</help>
+				<order>9999</order>
+				<contexts>
+					<row>web</row>
+				</contexts>
+				<hasAdvancedSettings>1</hasAdvancedSettings>
+				<isCustomTemplate>0</isCustomTemplate>
+				<parameters>
+				</parameters>
+			</row>
+		</types>
+	</row>
+	<row>
+		<name>User Engagement</name>
+		<types>
+			<row>
+				<id>ElementVisibility</id>
+				<name>Element Visibility</name>
+				<description>Triggered when a specific element becomes visible.</description>
+				<category>User Engagement</category>
+				<icon>plugins/TagManager/images/icons/show.svg</icon>
+				<help>Triggered when a specified element becomes visible in the user's viewport. Identify the element using its element ID or a CSS selector. Optionally, enable tracking for dynamic DOM elements to ensure the trigger works for elements added or modified after the page loads.</help>
+				<order>9999</order>
+				<contexts>
+					<row>web</row>
+				</contexts>
+				<hasAdvancedSettings>1</hasAdvancedSettings>
+				<isCustomTemplate>0</isCustomTemplate>
+				<parameters>
+					<row>
+						<name>selectionMethod</name>
+						<title>Selection Method</title>
+						<value>elementId</value>
+						<defaultValue>elementId</defaultValue>
+						<type>string</type>
+						<uiControl>select</uiControl>
+						<uiControlAttributes>
+						</uiControlAttributes>
+						<availableValues>
+							<cssSelector>CSS Selector</cssSelector>
+							<elementId>Element ID</elementId>
+						</availableValues>
+						<description>Select the way you want to identify an element you want to select.</description>
+						<inlineHelp />
+						<introduction />
+						<condition />
+						<fullWidth>0</fullWidth>
+					</row>
+					<row>
+						<name>cssSelector</name>
+						<title>CSS Selector</title>
+						<value />
+						<defaultValue />
+						<type>string</type>
+						<uiControl>text</uiControl>
+						<uiControlAttributes>
+							<placeholder>e.g. #submitOrderBtnId</placeholder>
+						</uiControlAttributes>
+						<availableValues />
+						<description>A CSS selector allows you to select an element by id, className, element names, etc. If multiple elements match this selector, the first matching element will be used to get the value from. Examples for valid selectors are &quot;.classname&quot;, &quot;#id&quot; or &quot;li a&quot;.</description>
+						<inlineHelp />
+						<introduction />
+						<condition>selectionMethod == &quot;cssSelector&quot;</condition>
+						<fullWidth>0</fullWidth>
+					</row>
+					<row>
+						<name>elementId</name>
+						<title>Element ID</title>
+						<value />
+						<defaultValue />
+						<type>string</type>
+						<uiControl>text</uiControl>
+						<uiControlAttributes>
+							<placeholder>e.g. submitOrderBtnId</placeholder>
+						</uiControlAttributes>
+						<availableValues />
+						<description>The id attribute specifies a unique id for an HTML element. Insert here the value of an ID attribute of any element within your website.</description>
+						<inlineHelp />
+						<introduction />
+						<condition>selectionMethod == &quot;elementId&quot;</condition>
+						<fullWidth>0</fullWidth>
+					</row>
+					<row>
+						<name>fireTriggerWhen</name>
+						<title>Fire this trigger</title>
+						<value>oncePage</value>
+						<defaultValue>oncePage</defaultValue>
+						<type>string</type>
+						<uiControl>select</uiControl>
+						<uiControlAttributes>
+						</uiControlAttributes>
+						<availableValues>
+							<oncePage>Once per page</oncePage>
+							<onceElement>Once per element</onceElement>
+							<every>Every time an element appears on screen</every>
+						</availableValues>
+						<description />
+						<inlineHelp />
+						<introduction />
+						<condition />
+						<fullWidth>0</fullWidth>
+					</row>
+					<row>
+						<name>minPercentVisible</name>
+						<title>Minimum Percent Visible</title>
+						<value>50</value>
+						<defaultValue>50</defaultValue>
+						<type>integer</type>
+						<uiControl>text</uiControl>
+						<uiControlAttributes>
+							<placeholder>e.g. 50</placeholder>
+						</uiControlAttributes>
+						<availableValues />
+						<description />
+						<inlineHelp />
+						<introduction />
+						<condition />
+						<fullWidth>0</fullWidth>
+					</row>
+					<row>
+						<name>observeDomChanges</name>
+						<title>Observe DOM Changes</title>
+						<value>0</value>
+						<defaultValue>0</defaultValue>
+						<type>boolean</type>
+						<uiControl>checkbox</uiControl>
+						<uiControlAttributes>
+						</uiControlAttributes>
+						<availableValues />
+						<description />
+						<inlineHelp>Enable if you want to track dynamic DOM elements. &lt;br&gt;&lt;strong&gt;Note: This might slow down the website if there are lot of DOM changes&lt;/strong&gt;</inlineHelp>
+						<introduction />
+						<condition />
+						<fullWidth>0</fullWidth>
+					</row>
+				</parameters>
+			</row>
+			<row>
+				<id>FormSubmit</id>
+				<name>Form Submit</name>
+				<description>Triggered when any form is submitted.</description>
+				<category>User Engagement</category>
+				<icon>plugins/TagManager/images/icons/form.svg</icon>
+				<help>Triggered when any form on the current page is submitted. To listen only to specific forms, please add conditions based on a &quot;form&quot; variable in the advanced settings.</help>
+				<order>9999</order>
+				<contexts>
+					<row>web</row>
+				</contexts>
+				<hasAdvancedSettings>1</hasAdvancedSettings>
+				<isCustomTemplate>0</isCustomTemplate>
+				<parameters>
+				</parameters>
+			</row>
+			<row>
+				<id>Fullscreen</id>
+				<name>Full screen</name>
+				<description>Triggered when the window goes into or leaves full screen.</description>
+				<category>User Engagement</category>
+				<icon>plugins/TagManager/images/icons/fullscreen.svg</icon>
+				<help>Triggered when a user enters or exits full-screen mode on your website. Configure this trigger to activate exclusively on entry, on exit, or for both actions, depending on your tracking needs.</help>
+				<order>9999</order>
+				<contexts>
+					<row>web</row>
+				</contexts>
+				<hasAdvancedSettings>1</hasAdvancedSettings>
+				<isCustomTemplate>0</isCustomTemplate>
+				<parameters>
+					<row>
+						<name>triggerAction</name>
+						<title>Fire this trigger when action is</title>
+						<value>enter</value>
+						<defaultValue>enter</defaultValue>
+						<type>string</type>
+						<uiControl>select</uiControl>
+						<uiControlAttributes>
+						</uiControlAttributes>
+						<availableValues>
+							<any>Any</any>
+							<enter>Only when entering fullscreen</enter>
+							<exit>Only when exiting fullscreen</exit>
+						</availableValues>
+						<description />
+						<inlineHelp />
+						<introduction />
+						<condition />
+						<fullWidth>0</fullWidth>
+					</row>
+					<row>
+						<name>triggerLimit</name>
+						<title>Trigger limit</title>
+						<value>0</value>
+						<defaultValue>0</defaultValue>
+						<type>integer</type>
+						<uiControl>text</uiControl>
+						<uiControlAttributes>
+							<placeholder>e.g. 0</placeholder>
+						</uiControlAttributes>
+						<availableValues />
+						<description>Enter &quot;0&quot; to trigger it each time the event occurs</description>
+						<inlineHelp />
+						<introduction />
+						<condition />
+						<fullWidth>0</fullWidth>
+					</row>
+				</parameters>
+			</row>
+			<row>
+				<id>HistoryChange</id>
+				<name>History Change</name>
+				<description>Triggered when the current URL changes.</description>
+				<category>User Engagement</category>
+				<icon>plugins/TagManager/images/defaultIcon.svg</icon>
+				<help>Triggered when the browser's history changes, such as navigating in a single-page application (SPA) or updating the URL without a full page reload. Track virtual pageviews and monitor user interactions in dynamic web environments.</help>
+				<order>9999</order>
+				<contexts>
+					<row>web</row>
+				</contexts>
+				<hasAdvancedSettings>1</hasAdvancedSettings>
+				<isCustomTemplate>0</isCustomTemplate>
+				<parameters>
+				</parameters>
+			</row>
+			<row>
+				<id>ScrollReach</id>
+				<name>Scroll Reach</name>
+				<description>Triggered as soon as the user scrolls to a certain position.</description>
+				<category>User Engagement</category>
+				<icon>plugins/TagManager/images/defaultIcon.svg</icon>
+				<help>This trigger is triggered when a user either scrolls or resizes the current browser window. The trigger is not triggered when the user scrolls within a certain element. It won't trigger every time a certain scroll position has been reached but only the very first time the configured position has been reached.</help>
+				<order>9999</order>
+				<contexts>
+					<row>web</row>
+				</contexts>
+				<hasAdvancedSettings>1</hasAdvancedSettings>
+				<isCustomTemplate>0</isCustomTemplate>
+				<parameters>
+					<row>
+						<name>scrollType</name>
+						<title>Scroll Match Type</title>
+						<value>verticalpercentage</value>
+						<defaultValue>verticalpercentage</defaultValue>
+						<type>string</type>
+						<uiControl>select</uiControl>
+						<uiControlAttributes>
+						</uiControlAttributes>
+						<availableValues>
+							<verticalpercentage>Vertical - Percentage</verticalpercentage>
+							<verticalpixel>Vertical - Pixels</verticalpixel>
+							<horizontalpercentage>Horizontal - Percentage</horizontalpercentage>
+							<horizontalpixel>Horizontal - Pixels</horizontalpixel>
+						</availableValues>
+						<description />
+						<inlineHelp />
+						<introduction />
+						<condition />
+						<fullWidth>0</fullWidth>
+					</row>
+					<row>
+						<name>pixels</name>
+						<title>Pixels</title>
+						<value>1</value>
+						<defaultValue>1</defaultValue>
+						<type>integer</type>
+						<uiControl>text</uiControl>
+						<uiControlAttributes>
+							<placeholder>eg. 50, 1020, 3059</placeholder>
+						</uiControlAttributes>
+						<availableValues />
+						<description>The amount in pixels that needs to be visible of this element depending on the selected scroll match type.</description>
+						<inlineHelp />
+						<introduction />
+						<condition>scrollType == &quot;verticalpixel&quot; || scrollType == &quot;horizontalpixel&quot;</condition>
+						<fullWidth>0</fullWidth>
+					</row>
+					<row>
+						<name>percentage</name>
+						<title>Percentage</title>
+						<value>50</value>
+						<defaultValue>50</defaultValue>
+						<type>integer</type>
+						<uiControl>text</uiControl>
+						<uiControlAttributes>
+							<placeholder>eg. 20, 50, 75, 90</placeholder>
+						</uiControlAttributes>
+						<availableValues />
+						<description>You can specify any number between 1 and 100. If you specify 50, then it means the element needs to be at least 50% visible depending on the scroll match type.</description>
+						<inlineHelp />
+						<introduction />
+						<condition>scrollType == &quot;verticalpercentage&quot; || scrollType == &quot;horizontalpercentage&quot;</condition>
+						<fullWidth>0</fullWidth>
+					</row>
+				</parameters>
+			</row>
+			<row>
+				<id>UserInteraction</id>
+				<name>User Interaction</name>
+				<description>Triggered when user interacts with the site, i. e. touch, move, scroll or mouse click event is executed by the user on site.</description>
+				<category>User Engagement</category>
+				<icon>plugins/TagManager/images/icons/interaction.svg</icon>
+				<help>This trigger is triggered when the user interacts with the page (touch, mousemove, scroll, mouse click). Loading and processing JS on a website usually blocks page rendering and impacts performance. Defering JS via this trigger until after the page was rendered and user interacts with the page can be useful to avoid negative impacts on Page Speed and Core Web Vitals scores. Note: User interaction is triggered only once when the user interacts with the page for the first time after page load.</help>
+				<order>9999</order>
+				<contexts>
+					<row>web</row>
+				</contexts>
+				<hasAdvancedSettings>1</hasAdvancedSettings>
+				<isCustomTemplate>0</isCustomTemplate>
+				<parameters>
+				</parameters>
+			</row>
+			<row>
+				<id>WindowLeave</id>
+				<name>Window Leave</name>
+				<description>Triggered when the user is about to leave the current page by moving the mouse outside the window.</description>
+				<category>User Engagement</category>
+				<icon>plugins/TagManager/images/defaultIcon.svg</icon>
+				<help>This trigger is triggered when the user is possibly about to leave the website and moves their mouse outside of the current web page, for example towards the browser URL address line or any other buttons. This can be useful to keep your visitor engaged and not lose the visitor, for example by showing an exit popup. You may be also interested in the &quot;Window Unload&quot; trigger which is triggered as soon as the user has actually left the current page.</help>
+				<order>9999</order>
+				<contexts>
+					<row>web</row>
+				</contexts>
+				<hasAdvancedSettings>1</hasAdvancedSettings>
+				<isCustomTemplate>0</isCustomTemplate>
+				<parameters>
+					<row>
+						<name>triggerLimit</name>
+						<title>Trigger limit</title>
+						<value>1</value>
+						<defaultValue>1</defaultValue>
+						<type>integer</type>
+						<uiControl>text</uiControl>
+						<uiControlAttributes>
+							<placeholder>e.g. 1</placeholder>
+						</uiControlAttributes>
+						<availableValues />
+						<description>Enter &quot;0&quot; to not limit how often the trigger should be triggered</description>
+						<inlineHelp />
+						<introduction />
+						<condition />
+						<fullWidth>0</fullWidth>
+					</row>
+				</parameters>
+			</row>
+			<row>
+				<id>WindowUnload</id>
+				<name>Window Unload</name>
+				<description>Triggered just before the browser window is closed or when the user navigates to a different page.</description>
+				<category>User Engagement</category>
+				<icon>plugins/TagManager/images/defaultIcon.svg</icon>
+				<help>This trigger identifies the event when a user is actually closing the current page compared to the &quot;Window Leave&quot; trigger which triggers when the user is about to leave your page. Either by navigating to another page within the current browser tab, or by completely closing the tab.</help>
+				<order>9999</order>
+				<contexts>
+					<row>web</row>
+				</contexts>
+				<hasAdvancedSettings>1</hasAdvancedSettings>
+				<isCustomTemplate>0</isCustomTemplate>
+				<parameters>
+				</parameters>
+			</row>
+		</types>
+	</row>
+	<row>
+		<name>Others</name>
+		<types>
+			<row>
+				<id>CustomEvent</id>
+				<name>Custom Event</name>
+				<description>Triggered when a custom event is pushed to the Data-Layer.</description>
+				<category>Others</category>
+				<icon>plugins/TagManager/images/defaultIcon.svg</icon>
+				<help>Allows developers to define manually when this trigger should be triggered by pushing an event to the Data-Layer. This way you can for example execute certain actions when a product is added to the cart, or when a user logs in.</help>
+				<order>9999</order>
+				<contexts>
+					<row>web</row>
+				</contexts>
+				<hasAdvancedSettings>1</hasAdvancedSettings>
+				<isCustomTemplate>0</isCustomTemplate>
+				<parameters>
+					<row>
+						<name>eventName</name>
+						<title>Event Name</title>
+						<value />
+						<defaultValue />
+						<type>string</type>
+						<uiControl>text</uiControl>
+						<uiControlAttributes>
+						</uiControlAttributes>
+						<availableValues />
+						<description>The name of the event that is pushed to the Data-Layer. For example you can push an event by adding this to your website: _mtm.push({&quot;event&quot;: &quot;my-custom-event&quot;});</description>
+						<inlineHelp />
+						<introduction />
+						<condition />
+						<fullWidth>0</fullWidth>
+						<component>
+							<plugin>TagManager</plugin>
+							<name>FieldVariableTemplate</name>
+						</component>
+					</row>
+				</parameters>
+			</row>
+			<row>
+				<id>JavaScriptError</id>
+				<name>JavaScript Error</name>
+				<description>Triggered when a JavaScript error happens.</description>
+				<category>Others</category>
+				<icon>plugins/TagManager/images/icons/error.svg</icon>
+				<help>Triggered when a JavaScript error occurs on the webpage. You can specify conditions to narrow down error tracking.</help>
+				<order>9999</order>
+				<contexts>
+					<row>web</row>
+				</contexts>
+				<hasAdvancedSettings>1</hasAdvancedSettings>
+				<isCustomTemplate>0</isCustomTemplate>
+				<parameters>
+				</parameters>
+			</row>
+			<row>
+				<id>Timer</id>
+				<name>Timer</name>
+				<description>Triggered in a specific interval, for example every 3 seconds.</description>
+				<category>Others</category>
+				<icon>plugins/TagManager/images/icons/timer.svg</icon>
+				<help>Use this trigger to perform an action periodically.</help>
+				<order>9999</order>
+				<contexts>
+					<row>web</row>
+				</contexts>
+				<hasAdvancedSettings>1</hasAdvancedSettings>
+				<isCustomTemplate>0</isCustomTemplate>
+				<parameters>
+					<row>
+						<name>triggerInterval</name>
+						<title>Trigger interval</title>
+						<value>3000</value>
+						<defaultValue>3000</defaultValue>
+						<type>integer</type>
+						<uiControl>text</uiControl>
+						<uiControlAttributes>
+							<placeholder>e.g. 3000</placeholder>
+						</uiControlAttributes>
+						<availableValues />
+						<description />
+						<inlineHelp />
+						<introduction />
+						<condition />
+						<fullWidth>0</fullWidth>
+					</row>
+					<row>
+						<name>eventName</name>
+						<title>Event Name</title>
+						<value>mtm.Timer</value>
+						<defaultValue>mtm.Timer</defaultValue>
+						<type>string</type>
+						<uiControl>text</uiControl>
+						<uiControlAttributes>
+						</uiControlAttributes>
+						<availableValues />
+						<description>You can optionally change the name of this event. This can be useful if you have for example multiple timers on the page and want to perform different logic based on the name of the timer.</description>
+						<inlineHelp />
+						<introduction />
+						<condition />
+						<fullWidth>0</fullWidth>
+						<component>
+							<plugin>TagManager</plugin>
+							<name>FieldVariableTemplate</name>
+						</component>
+					</row>
+					<row>
+						<name>triggerLimit</name>
+						<title>Trigger limit</title>
+						<value>0</value>
+						<defaultValue>0</defaultValue>
+						<type>integer</type>
+						<uiControl>text</uiControl>
+						<uiControlAttributes>
+							<placeholder>e.g. 0</placeholder>
+						</uiControlAttributes>
+						<availableValues />
+						<description>Enter &quot;0&quot; to not limit the trigger.</description>
+						<inlineHelp />
+						<introduction />
+						<condition />
+						<fullWidth>0</fullWidth>
+					</row>
+				</parameters>
+			</row>
+		</types>
+	</row>
+</result>

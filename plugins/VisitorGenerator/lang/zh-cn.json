@@ -1,0 +1,25 @@
+{
+    "VisitorGenerator": {
+        "AreYouSure": "确定生成虚假访问数据？",
+        "AutomaticReprocess": "下次您访问Matomo报告时，将重新处理报告，这可能需要几分钟。",
+        "ChoiceYes": "是",
+        "CliToolUsage": "通过使用%1$sMatomo CLI工具%2$s，您不仅可以产生更多的访问，而且可以产生用户，网站和目标。",
+        "ConfirmVisitorGeneration": "请在方框中打勾以确认访客的年龄",
+        "CustomMatomoUrl": "自定义Matomo URL",
+        "DaysToCompute": "计算天数",
+        "GenerateFakeActions": "每天将在此站点上至少产生%d次虚假操作。",
+        "GeneratedVisitsFor": "最近%1$s天和%2$s天的访问",
+        "LogImporterNote": "还有一个更快的工具可以在Matomo中导入大型测试数据，请参见%1$s自述文件%2$s。",
+        "NbRequestsPerSec": "每秒请求数",
+        "NotReversible": "它可能%1$s无法%2$s简单地从 piwik 记录中刪除。",
+        "NumberOfGeneratedActions": "产生动作的数量",
+        "OverwriteLogFiles": "按“Apache combined log”格式覆盖“matomo.php”的日志文件以生成虚假访问数据（在%s中更改或添加文件）。插件开发者在其插件的“data”文件夹以“*.log”文件形式添加自己的日志文件。",
+        "PleaseBePatient": "生成访问和操作需要一些时间，请耐心等待。",
+        "PluginDescription": "在Matomo中创建虚假访问和行为。生成伪造数据以填充Matomo报告。",
+        "ReRunArchiveScript": "请重新运行crontab './console core:archive'命令以刷新报告。%1$s请参阅“如何设置报告的自动存档” %2$s",
+        "SelectWebsite": "选择网站",
+        "Submit": "送出",
+        "VisitorGenerator": "访客产生器",
+        "Warning": "您即将在Matomo数据库里生成虚假访问数据。"
+    }
+}

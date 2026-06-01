@@ -1,0 +1,25 @@
+{
+    "VisitorGenerator": {
+        "AreYouSure": "Gerar visitas falsas?",
+        "AutomaticReprocess": "Da próxima vez que você visitar os relatórios do Matomo, eles serão reprocessados. Isso pode levar alguns minutos.",
+        "ChoiceYes": "Sim",
+        "CliToolUsage": "A ferramenta %1$sMatomo CLI%2$s pode não só gerar ainda mais visitas, mas também usuários, sites e metas.",
+        "ConfirmVisitorGeneration": "Marque a caixa para confirmar a geração do visitante",
+        "CustomMatomoUrl": "URL Matomo Personalizada",
+        "DaysToCompute": "Dias para computar",
+        "GenerateFakeActions": "Isto irá gerar pelo menos %d ações falsas por dia neste site.",
+        "GeneratedVisitsFor": "Gerou visitas por %1$s e para os últimos %2$s dias",
+        "LogImporterNote": "O %1$sREADME%2$s contém informações sobre uma ferramenta mais rápida que importa grandes dados de teste no Matomo.",
+        "NbRequestsPerSec": "Solicitações por segundo",
+        "NotReversible": "%1$s não %2$s será possível apagar facilmente estas visitas dos logs Matomo.",
+        "NumberOfGeneratedActions": "Número de ações geradas",
+        "OverwriteLogFiles": "Substitua os arquivos de log \"matomo.php\" para gerar visitas falsas no formato \"Log combinado do Apache\" (altere ou adicione arquivos em %s). Os desenvolvedores de plugins adicionam seus próprios arquivos de log como arquivos '*.log' em uma pasta 'data' de seus plugins.",
+        "PleaseBePatient": "Gerar visitas e ações pode levar alguns minutos.",
+        "PluginDescription": "Cria visitas e ações no Matomo. Gera dados falsos para popular os relatórios do Matomo.",
+        "ReRunArchiveScript": "Execute novamente o comando crontab './console core:archive' para atualizar os relatórios, conforme %1$s\"Como configurar o arquivamento automático de seus relatórios\"%2$s",
+        "SelectWebsite": "Selecionar website",
+        "Submit": "Enviar",
+        "VisitorGenerator": "Gerador de visitantes",
+        "Warning": "Você está prestes a gerar visitas falsas para seu banco de dados do Matomo."
+    }
+}

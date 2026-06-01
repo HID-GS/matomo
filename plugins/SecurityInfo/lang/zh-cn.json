@@ -1,0 +1,9 @@
+{
+    "SecurityInfo": {
+        "PluginDescription": "关于您PHP环境的安全信息和建议改进措施。它不替代安全开发实践，也不进行代码/应用程序的审计。基于PHP Security Consortium的PhpSecInfo。",
+        "Result": "结果",
+        "Security": "安全",
+        "SecurityInformation": "PHP安全信息",
+        "Test": "测试"
+    }
+}
