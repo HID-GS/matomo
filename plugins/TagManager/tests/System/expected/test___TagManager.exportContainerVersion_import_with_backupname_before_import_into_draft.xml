@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<result>
+	<idcontainer>import01</idcontainer>
+	<idsite>5</idsite>
+	<context>web</context>
+	<name>My Name</name>
+	<description />
+	<ignoreGtmDataLayer>0</ignoreGtmDataLayer>
+	<activelySyncGtmDataLayer>0</activelySyncGtmDataLayer>
+	<isTagFireLimitAllowedInPreviewMode>0</isTagFireLimitAllowedInPreviewMode>
+	
+	
+	
+	
+	<revision>0</revision>
+	<version>
+		<name />
+		<description />
+		<revision>0</revision>
+		
+		
+		
+		
+	</version>
+	<tags>
+	</tags>
+	<triggers>
+	</triggers>
+	<variables>
+	</variables>
+</result>

@@ -1,0 +1,48 @@
+name: Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  push:
+    branches:
+      - '**.x-dev'
+
+permissions:
+  actions: read
+  checks: read
+  contents: read
+  deployments: none
+  issues: read
+  packages: none
+  pull-requests: read
+  repository-projects: none
+  security-events: none
+  statuses: none
+
+jobs:
+  build:
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        python-version: [ '3.8', '3.9', '3.10', '3.13' ]
+        operating-system: [ 'ubuntu-latest' ]
+    name: Tests (Python ${{ matrix.python-version }})
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+        env:
+          PIP_TRUSTED_HOST: "pypi.python.org pypi.org files.pythonhosted.org"
+      - name: Install Pytest
+        run: |
+          pip install --upgrade pip
+          pip install pytest
+          python --version ; pip --version ; pytest --version
+        shell: bash
+      - name: Run Tests
+        run: |
+          cd tests
+          ./run_tests.sh
+        shell: bash

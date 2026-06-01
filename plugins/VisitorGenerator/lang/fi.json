@@ -1,0 +1,22 @@
+{
+    "VisitorGenerator": {
+        "AreYouSure": "Haluatko varmasti luoda valheellisia käyntejä?",
+        "AutomaticReprocess": "Raportit käsitellään uudelleen, kun käyt seuraavan kerran Matomon raporteissa. Tämä saattaa kestää joitakin minuutteja.",
+        "ChoiceYes": "Kyllä",
+        "ConfirmVisitorGeneration": "Varmista kävijöiden luominen rastittamalla valintalaatikko",
+        "CustomMatomoUrl": "Muokattu Matomon osoite",
+        "DaysToCompute": "Päivien määrä",
+        "GenerateFakeActions": "Tämä luo vähintään %d väärennettyä toimintoa tälle sivustolle joka päivä.",
+        "GeneratedVisitsFor": "Tehdyt käynnit %1$s:lla viimeisten %2$s päivän aikana",
+        "LogImporterNote": "On olemassa myös nopeampi työkalu, joka tuo suuria testidatoja Matomoon, katso %1$sREADME%2$s.",
+        "NbRequestsPerSec": "Pyyntöä / sekunti",
+        "NotReversible": "Näitä käyntejä %1$sei voi%2$s helposti poistaa Matomon lokeista.",
+        "NumberOfGeneratedActions": "Toimeenpantujen toimintojen lukumäärä",
+        "PleaseBePatient": "Vierailujen ja toimien luominen voi kestää muutaman minuutin.",
+        "ReRunArchiveScript": "Suorita crontab-komento './console core:archive' uudelleen virkistääksesi raportit kohdan %1$s\"Raporttien automaattisen arkistoinnin määrittäminen\"%2$s mukaisesti",
+        "SelectWebsite": "Valitse sivusto",
+        "Submit": "Lähetä",
+        "VisitorGenerator": "Kävijöiden luonti",
+        "Warning": "Olet luomassa valheellisia käyntejä, jotka tallennetaan Matomon tietokantaan."
+    }
+}
