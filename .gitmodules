@@ -1,38 +1,47 @@
 [submodule "plugins/SecurityInfo"]
-    path = plugins/SecurityInfo
-    url = https://github.com/matomo-org/plugin-SecurityInfo.git
-    branch = 5.x-dev
+path = plugins/SecurityInfo
+url = https://github.com/matomo-org/plugin-SecurityInfo.git
+branch = 5.x-dev
+shallow = true
 [submodule "plugins/VisitorGenerator"]
-    path = plugins/VisitorGenerator
-    url = https://github.com/matomo-org/plugin-VisitorGenerator.git
-    branch = 5.x-dev
+path = plugins/VisitorGenerator
+url = https://github.com/matomo-org/plugin-VisitorGenerator.git
+branch = 5.x-dev
+shallow = true
 [submodule "plugins/TasksTimetable"]
-    path = plugins/TasksTimetable
-    url = https://github.com/matomo-org/plugin-TasksTimetable.git
-    branch = 5.x-dev
+path = plugins/TasksTimetable
+url = https://github.com/matomo-org/plugin-TasksTimetable.git
+branch = 5.x-dev
+shallow = true
 [submodule "plugins/QueuedTracking"]
-    path = plugins/QueuedTracking
-    url = https://github.com/matomo-org/plugin-QueuedTracking.git
-    branch = 5.x-dev
+path = plugins/QueuedTracking
+url = https://github.com/matomo-org/plugin-QueuedTracking.git
+branch = 5.x-dev
+shallow = true
 [submodule "plugins/AnonymousPiwikUsageMeasurement"]
-    path = plugins/AnonymousPiwikUsageMeasurement
-    url = https://github.com/matomo-org/plugin-AnonymousPiwikUsageMeasurement.git
-    branch = 5.x-dev
+path = plugins/AnonymousPiwikUsageMeasurement
+url = https://github.com/matomo-org/plugin-AnonymousPiwikUsageMeasurement.git
+branch = 5.x-dev
+shallow = true
 [submodule "plugins/TagManager"]
-    path = plugins/TagManager
-    url = https://github.com/matomo-org/tag-manager.git
-    branch = 5.x-dev
+path = plugins/TagManager
+url = https://github.com/matomo-org/tag-manager.git
+branch = 5.x-dev
+shallow = true
 [submodule "plugins/DeviceDetectorCache"]
-    path = plugins/DeviceDetectorCache
-    url = https://github.com/matomo-org/plugin-DeviceDetectorCache.git
-    branch = 5.x-dev
+path = plugins/DeviceDetectorCache
+url = https://github.com/matomo-org/plugin-DeviceDetectorCache.git
+branch = 5.x-dev
+shallow = true
 [submodule "misc/log-analytics"]
-    path = misc/log-analytics
-    url = https://github.com/matomo-org/matomo-log-analytics.git
-    branch = 5.x-dev
+path = misc/log-analytics
+url = https://github.com/matomo-org/matomo-log-analytics.git
+branch = 5.x-dev
+shallow = true
 [submodule "plugins/Morpheus/icons"]
-    path = plugins/Morpheus/icons
-    url = https://github.com/matomo-org/matomo-icons.git
-    branch = master
+path = plugins/Morpheus/icons
+url = https://github.com/matomo-org/matomo-icons.git
+branch = master
+shallow = true
 
 # Note: do not add new plugin submodules here, but a few lines above
