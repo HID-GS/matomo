@@ -1,0 +1,25 @@
+{
+    "VisitorGenerator": {
+        "AreYouSure": "Generera falska besök?",
+        "AutomaticReprocess": "Nästa gång du besöker Matomo-rapporterna kommer de att bearbetas på nytt. Det kan ta några minuter.",
+        "ChoiceYes": "Ja",
+        "CliToolUsage": "%1$sMatomo CLI-verktyget%2$s kan inte bara generera ännu fler besök, utan också användare, webbplatser och mål.",
+        "ConfirmVisitorGeneration": "Kryssa i rutan för att bekräfta besökargenerering",
+        "CustomMatomoUrl": "Anpassad Matomo-URL",
+        "DaysToCompute": "Dagar att beräkna",
+        "GenerateFakeActions": "Detta kommer att generera minst %d falska händelser på denna webbplats varje dag.",
+        "GeneratedVisitsFor": "Genererade besök för %1$s och för de senaste %2$s dagarna",
+        "LogImporterNote": "I %1$sREADME%2$s finns information om ett snabbare verktyg som importerar stora testdata till Matomo.",
+        "NbRequestsPerSec": "Förfrågningar per sekund",
+        "NotReversible": "Det kommer %1$s inte%2$s vara möjligt att enkelt ta bort dessa besök från Matomo's logg.",
+        "NumberOfGeneratedActions": "Antal generade handlingar",
+        "OverwriteLogFiles": "Skriv över loggfilerna i \"matomo.php\" för att generera falska besök i formatet \"Apache combined log\" (ändra eller lägg till filer i %s). Utvecklare av insticksprogram lägger till sina egna loggfiler som '*.log\"-filer i en 'data'-mapp i sitt insticksprogram.",
+        "PleaseBePatient": "Att generera besök och åtgärder kan ta några minuter.",
+        "PluginDescription": "Skapa fiktiva besök och handlingar i Matomo. Generera fiktiv data för att fylla i Matomo-rapporter.",
+        "ReRunArchiveScript": "Kör kommandot crontab './console core:archive' igen för att uppdatera rapporterna enligt %1$s\"Så här ställer du in automatisk arkivering av dina rapporter\"%2$s",
+        "SelectWebsite": "Välj Webbplats",
+        "Submit": "Skicka",
+        "VisitorGenerator": "Besöksgenerator",
+        "Warning": "Du är på väg att generera falska besök i din Matomo-databas."
+    }
+}

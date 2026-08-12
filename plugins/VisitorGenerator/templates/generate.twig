@@ -1,0 +1,13 @@
+{% extends 'admin.twig' %}
+
+{% block content %}
+    <div
+        vue-entry="VisitorGenerator.GeneratePage"
+        site-name="{{ siteName|json_encode }}"
+        days="{{ days|json_encode }}"
+        nb-actions-total="{{ nbActionsTotal|json_encode }}"
+        nb-requests-per-sec="{{ nbRequestsPerSec|json_encode }}"
+        browser-archiving-enabled="{{ browserArchivingEnabled|json_encode }}"
+        timer="{{ (timer ~ '')|json_encode }}"
+    ></div>
+{% endblock %}

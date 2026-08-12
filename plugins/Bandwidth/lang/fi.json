@@ -1,0 +1,14 @@
+{
+    "Bandwidth": {
+        "Bandwidth": "Kaista",
+        "ColumnAvgBandwidth": "Keskimääräinen kaistankäyttö",
+        "ColumnSumBandwidth": "Kaistankäyttö yhteensä",
+        "ColumnMaxBandwidth": "Kaistankäyttö enintään",
+        "ColumnMinBandwidth": "Kaistankäyttö vähintään",
+        "ColumnHitsWithBandwidth": "Kaistankäytön kanssa tallennettuja osumia",
+        "ColumnTotalOverallBandwidth": "tavua siirretty yhteensä",
+        "ColumnTotalPageviewBandwidth": "tavua siirretty sivunkatseluihin",
+        "ColumnTotalDownloadBandwidth": "tavua siirretty latauksissa",
+        "SparklineTotalBandwidthDetails": "%s tavua siirretty yhteensä"
+    }
+}

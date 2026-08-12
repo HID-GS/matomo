@@ -1,0 +1,17 @@
+{% extends 'admin.twig' %}
+
+{% set title %}{{ 'VisitorGenerator_VisitorGenerator'|translate }}{% endset %}
+
+{% block topcontrols %}
+    {% include "@CoreHome/_siteSelectHeader.twig" %}
+{% endblock %}
+
+{% block content %}
+    <div
+        vue-entry="VisitorGenerator.AdminPage"
+        access-log-path="{{ accessLogPath|json_encode }}"
+        id-site="{{ idSite|json_encode }}"
+        count-min-actions-per-run="{{ countMinActionsPerRun|json_encode }}"
+        form-nonce="{{ nonce|json_encode }}"
+    ></div>
+{% endblock %}

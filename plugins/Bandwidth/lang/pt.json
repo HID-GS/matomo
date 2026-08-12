@@ -1,0 +1,14 @@
+{
+    "Bandwidth": {
+        "Bandwidth": "Largura de banda",
+        "ColumnAvgBandwidth": "Largura de banda média",
+        "ColumnHitsWithBandwidth": "Registos registados com a largura de banda",
+        "ColumnMaxBandwidth": "Largura de banda máxima",
+        "ColumnMinBandwidth": "Largura de banda mínima",
+        "ColumnSumBandwidth": "Somatório de largura de banda",
+        "ColumnTotalDownloadBandwidth": "Bytes transferidas nas descargas",
+        "ColumnTotalOverallBandwidth": "bytes transferidos no total",
+        "ColumnTotalPageviewBandwidth": "Bytes transferidos nas visualizações de páginas",
+        "SparklineTotalBandwidthDetails": "%s bytes transferidos no total"
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "VisitorGenerator": {
+        "AreYouSure": "Ste prepričani, da želite generirate navidezne obiske?",
+        "ChoiceYes": "Da",
+        "NbRequestsPerSec": "Zahtev na sekundo",
+        "SelectWebsite": "Izberi spletno stran",
+        "Submit": "Uveljavi",
+        "VisitorGenerator": "Generator Obiskovalcev",
+        "Warning": "Ravnokar boste generirali navidezne obiske, ki bodo shranjeni v podatkovno bazo vašega sistema Matomo."
+    }
+}
