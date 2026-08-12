@@ -10,10 +10,13 @@
 namespace Piwik\Plugins\TrackingSpamPrevention;
 
 use Piwik\Config;
+use Piwik\Container\StaticContainer;
 
 class Configuration
 {
     public const DEFAULT_RANGE_THROW_EXCEPTION = 0;
+
+    /** @deprecated since 5.1.0, the allow list was moved to the `ip_allow_list` system setting */
     public const DEFAULT_RANGE_ALLOW_LIST = [''];
     public const DEFAULT_GEOIP_MATCH_PROVIDERS = [
         'alicloud',
@@ -74,7 +77,6 @@ class Configuration
         'keminet shpk',
         'worldstream b.v.',
         'aeza international ltd',
-        'verein zur foerderung eines deutschen forschungsnetzes',
         'asline limited',
         'packethub s.a.',
         'gorillaservers',
@@ -87,10 +89,21 @@ class Configuration
         'limestone networks, inc',
         'scaleway',
         'm247 europe',
+        'tencent',
+        'fdcservers',
+        'ace data centers',
+        'egihosting',
+        'hangzhou alibaba advertising',
+        'sharktech',
+        'dmit cloud services',
     ];
 
     public const KEY_RANGE_THROW_EXCEPTION = 'block_cloud_sync_throw_exception_on_error';
+
+    /** @deprecated since 5.1.0, the allow list was moved to the `ip_allow_list` system setting */
     public const KEY_RANGE_ALLOW_LIST = 'iprange_allowlist';
+
+    /** @deprecated since 5.2.0, the list was moved to the `organisation_block_list` system setting */
     public const KEY_GEOIP_MATCH_PROVIDERS = 'block_geoip_organisations';
 
     public function install()
@@ -104,12 +117,6 @@ class Configuration
 
         if (empty($default[self::KEY_RANGE_THROW_EXCEPTION])) {
             $default[self::KEY_RANGE_THROW_EXCEPTION] = self::DEFAULT_RANGE_THROW_EXCEPTION;
-        }
-        if (empty($default[self::KEY_RANGE_ALLOW_LIST])) {
-            $default[self::KEY_RANGE_ALLOW_LIST] = self::DEFAULT_RANGE_ALLOW_LIST;
-        }
-        if (empty($default[self::KEY_GEOIP_MATCH_PROVIDERS])) {
-            $default[self::KEY_GEOIP_MATCH_PROVIDERS] = self::DEFAULT_GEOIP_MATCH_PROVIDERS;
         }
 
         $config->TrackingSpamPrevention = $default;
@@ -139,30 +146,13 @@ class Configuration
     }
 
     /**
+     * @deprecated since 5.1.0, use SystemSettings::getAllowedIpRanges() instead. The allow list was moved from the
+     *             config file to the `ip_allow_list` system setting.
      * @return array
      */
     public function getIpRangesAlwaysAllowed()
     {
-        $value = $this->getConfigValue(self::KEY_RANGE_ALLOW_LIST, self::DEFAULT_RANGE_ALLOW_LIST);
-
-        if (empty($value) || !is_array($value)) {
-            $value = self::DEFAULT_RANGE_ALLOW_LIST;
-        }
-
-        $value = array_values(array_filter($value));
-        $value = array_map(function ($range) {
-            if (strpos($range, '/') === false) {
-                // we assume user did not enter a range so we make it one that matches that one ip
-                if (strpos($range, '.') !== false) {
-                    $range .= '/32';
-                } elseif (strpos($range, ':') !== false) {
-                    $range .= '/128';
-                }
-            }
-            return $range;
-        }, $value);
-
-        return $value;
+        return StaticContainer::get(SystemSettings::class)->getAllowedIpRanges();
     }
 
     private function getConfig()

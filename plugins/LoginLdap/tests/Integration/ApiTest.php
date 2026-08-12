@@ -29,6 +29,8 @@ class ApiTest extends LdapIntegrationTest
     {
         parent::setUp();
 
+        $this->addPreexistingSuperUser();
+
         $this->api = new API();
     }
 
@@ -77,7 +79,8 @@ class ApiTest extends LdapIntegrationTest
             'enable_password_confirmation' => 0,
             'new_user_default_sites_view_access' => '10,11,13',
             'servers' => 'abc',
-            'nonconfigoption' => 'def'
+            'nonconfigoption' => 'def',
+            'password_confirmation' => self::TEST_SUPERUSER_PASS
         );
 
         $this->api->saveLdapConfig(json_encode($configToSave));
@@ -105,7 +108,8 @@ class ApiTest extends LdapIntegrationTest
             'enable_password_confirmation' => 1,
             'new_user_default_sites_view_access' => '10,11,13',
             'servers' => 'abc',
-            'nonconfigoption' => 'def'
+            'nonconfigoption' => 'def',
+            'password_confirmation' => self::TEST_SUPERUSER_PASS
         );
 
         $this->api->saveLdapConfig(json_encode($configToSave));
@@ -144,7 +148,7 @@ class ApiTest extends LdapIntegrationTest
             ),
         );
 
-        $this->api->saveServersInfo(json_encode($serverInfos));
+        $this->api->saveServersInfo(json_encode($serverInfos), self::TEST_SUPERUSER_PASS);
 
         $this->assertEquals(array(
             'hostname' => 'ahost.com',
@@ -190,7 +194,7 @@ class ApiTest extends LdapIntegrationTest
             ),
         );
 
-        $this->api->saveServersInfo(json_encode($serverInfos));
+        $this->api->saveServersInfo(json_encode($serverInfos), self::TEST_SUPERUSER_PASS);
 
         $this->assertEquals(array(
             'hostname' => 'thehost.com',
@@ -227,7 +231,7 @@ class ApiTest extends LdapIntegrationTest
             ),
         );
 
-        $this->api->saveServersInfo(json_encode($serverInfos));
+        $this->api->saveServersInfo(json_encode($serverInfos), self::TEST_SUPERUSER_PASS);
 
         $this->assertEquals(array(
             'hostname' => 'thehost.com',
@@ -237,6 +241,15 @@ class ApiTest extends LdapIntegrationTest
             'admin_pass' => 'pass',
             'start_tls' => null
         ), Config::getInstance()->LoginLdap_server2);
+    }
+
+    public function test_getPluginOptionValuesWithDefaults_UsesEnabledPasswordConfirmationByDefault()
+    {
+        unset(Config::getInstance()->LoginLdap['enable_password_confirmation']);
+
+        $ldapConfig = \Piwik\Plugins\LoginLdap\Config::getPluginOptionValuesWithDefaults();
+
+        $this->assertSame(1, $ldapConfig['enable_password_confirmation']);
     }
 
     public function test_synchronizeUser_Throws_WhenLdapUserDoesNotExist()

@@ -1,5 +1,21 @@
 # LoginLdap Changelog
 
+#### LoginLdap 5.2.4 - 2026-08-10
+- Added code to change the logic for random password generation
+
+#### LoginLdap 5.2.3 - 2026-08-03
+* Enabled password confirmation by default on the LoginLdap settings page
+* Added code to synchronize LDAP users using the resolved Matomo login instead of the supplied identifier
+
+#### LoginLdap 5.2.2 - 2026-07-27
+* Added code to harden the check for anonymous user on sync
+
+#### LoginLdap 5.2.1 - 2026-07-20
+* Added code to disallow createAppSpecificTokenAuth endpoint for WebServerAuth
+
+#### LoginLdap 5.2.0 - 2026-06-22
+* Added code to enable password confirmation before any LDAP config save
+
 #### LoginLdap 5.1.11 - 2026-05-11
 * Added code to not skip password confirmation check, if user is a non-ldap user and skip password confirmation is enabled.
 

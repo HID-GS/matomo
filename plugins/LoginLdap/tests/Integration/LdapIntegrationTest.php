@@ -104,6 +104,31 @@ abstract class LdapIntegrationTest extends IntegrationTestCase
         parent::tearDown();
     }
 
+    /**
+     * Creates an app specific token as an unauthenticated request (providing the user's
+     * credentials). The configured global authentication object is left untouched so it can
+     * still verify those credentials, only the current access identity is reset.
+     */
+    protected function createAppSpecificTokenAuthAsAnonymous(string $login, string $password, string $description): string
+    {
+        // Create the token as if from an unauthenticated request: only the current access
+        // identity is switched to anonymous for the call and restored afterwards. The
+        // configured global authentication object is left untouched so it can still verify
+        // the given credentials.
+        $access = Access::getInstance();
+        $loginProperty = new \ReflectionProperty(Access::class, 'login');
+        $loginProperty->setAccessible(true);
+        $previousLogin = $loginProperty->getValue($access);
+
+        $loginProperty->setValue($access, 'anonymous');
+
+        try {
+            return UsersManagerAPI::getInstance()->createAppSpecificTokenAuth($login, $password, $description);
+        } finally {
+            $loginProperty->setValue($access, $previousLogin);
+        }
+    }
+
     protected function addPreexistingSuperUser()
     {
         UsersManagerAPI::getInstance()->addUser(self::TEST_SUPERUSER_LOGIN, self::TEST_SUPERUSER_PASS, 'srodgers@aol.com');
@@ -132,8 +157,7 @@ abstract class LdapIntegrationTest extends IntegrationTestCase
     {
         $user = $this->getUser(self::TEST_LOGIN);
         $this->assertNotEmpty($user);
-        $passwordHelper = new Password();
-        $this->assertTrue($passwordHelper->verify(md5(self::TEST_PASS_LDAP), $user['password']));
+        $this->assertPasswordIsRandomPlaceholder($user['password']);
         unset($user['password']);
         $this->assertEquals(array(
             'login' => self::TEST_LOGIN,
@@ -141,6 +165,20 @@ abstract class LdapIntegrationTest extends IntegrationTestCase
         ), $user);
         $userMapper = new UserMapper();
         $this->assertTrue($userMapper->isUserLdapUser(self::TEST_LOGIN));
+    }
+
+    /**
+     * A synchronized LDAP user's Matomo password column holds an unguessable placeholder. It must
+     * not be derivable from the LDAP userPassword attribute: Matomo treats the column as a real
+     * password hash, so a derivable value would let anyone holding that attribute log in as the
+     * user, without the LDAP side checks (ldap_user_filter, required_member_of, account state)
+     * ever running.
+     */
+    protected function assertPasswordIsRandomPlaceholder($storedPasswordHash)
+    {
+        $passwordHelper = new Password();
+        $this->assertFalse($passwordHelper->verify(md5(self::TEST_PASS_LDAP), $storedPasswordHash));
+        $this->assertFalse($passwordHelper->verify(md5(self::TEST_PASS), $storedPasswordHash));
     }
 
     protected function assertRomanovSynchronized($expectedDomain)

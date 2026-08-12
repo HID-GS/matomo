@@ -144,15 +144,36 @@ class UserSynchronizer
                 'ldapLogin' => $user['login']
             ));
 
+            if (!empty($existingUser) && mb_strtolower($existingUser['login']) !== mb_strtolower($user['login'])) {
+                $logger->warning(
+                    "UserSynchronizer::{func}: refusing to synchronize LDAP user '{ldapLogin}': it resolves to the "
+                        . "existing Matomo user '{existingLogin}', which is a different login. This usually means two "
+                        . "LDAP identities differing by accent map onto one Matomo login.",
+                    array(
+                        'func' => 'synchronizeLdapUser',
+                        'ldapLogin' => $user['login'],
+                        'existingLogin' => $existingUser['login'],
+                    )
+                );
+
+                throw new \Exception("Cannot synchronize LDAP user '{$user['login']}': it resolves to a different "
+                    . "existing Matomo login.");
+            }
+
+            $syncLogin = !empty($existingUser) ? $existingUser['login'] : $user['login'];
+
             if (empty($existingUser)) {
                 //Need to set this to ensure we can add a new user without any password confirmation, refer skipPasswordConfirmation() in LoginLdap.php for further usage
                 self::$skipPasswordConfirmation = true;
-                $usersManagerApi->addUser($user['login'], $user['password'], $user['email'], $isPasswordHashed = true);
-                self::$skipPasswordConfirmation = false;
+                try {
+                    $usersManagerApi->addUser($syncLogin, $user['password'], $user['email'], $isPasswordHashed = true);
+                } finally {
+                    self::$skipPasswordConfirmation = false;
+                }
 
                 // set new user view access
                 if (!empty($newUserDefaultSitesWithViewAccess)) {
-                    $usersManagerApi->setUserAccess($user['login'], 'view', $newUserDefaultSitesWithViewAccess);
+                    $usersManagerApi->setUserAccess($syncLogin, 'view', $newUserDefaultSitesWithViewAccess);
                 }
             } else {
                 if (!$userMapper->isUserLdapUser($existingUser['login'])) {
@@ -161,27 +182,33 @@ class UserSynchronizer
                     if (Config::getShouldSynchronizeUsersAfterLogin()) {
                         $usersManagerApi::$UPDATE_USER_REQUIRE_PASSWORD_CONFIRMATION = false;
                         self::$allowUpdateUser = true;
-                        $usersManagerApi->updateUser($user['login'], $user['password'], $user['email'], $isPasswordHashed = true, true);
-                        $usersManagerApi::$UPDATE_USER_REQUIRE_PASSWORD_CONFIRMATION = true;
-                        self::$allowUpdateUser = false;
+                        try {
+                            $usersManagerApi->updateUser($syncLogin, $user['password'], $user['email'], $isPasswordHashed = true, true);
+                        } finally {
+                            $usersManagerApi::$UPDATE_USER_REQUIRE_PASSWORD_CONFIRMATION = true;
+                            self::$allowUpdateUser = false;
+                        }
                     } else {
                         self::$allowUpdateUser = true;
-                        $userUpdater->updateUserWithoutCurrentPassword($user['login'], $user['password'], $user['email'], $isPasswordHashed = true);
-                        self::$allowUpdateUser = false;
+                        try {
+                            $userUpdater->updateUserWithoutCurrentPassword($syncLogin, $user['password'], $user['email'], $isPasswordHashed = true);
+                        } finally {
+                            self::$allowUpdateUser = false;
+                        }
                     }
 
                     // manually reset ts_password_modified to user creation date since it will just cause sessions to prematurely expire
                     // (note: it is not possible to change LDAP passwords through Matomo)
-                    $this->resetUserTsPassword($user['login']);
+                    $this->resetUserTsPassword($syncLogin);
                 }
             }
 
-            $userMapper->markUserAsLdapUser($user['login']);
+            $userMapper->markUserAsLdapUser($syncLogin);
             if (!empty($existingUser['invite_token'])) {
-                $this->autoAcceptInvite($user['login']);
+                $this->autoAcceptInvite($syncLogin);
             }
 
-            return $userModel->getUser($user['login']);
+            return $userModel->getUser($syncLogin);
         });
     }
 
@@ -196,6 +223,14 @@ class UserSynchronizer
         // UserSynchronizer::makeConfigured() only sets a UserAccessMapper when Config::isAccessSynchronizationEnabled()
         // is true, so return early in this case.
         if (empty($this->userAccessMapper) || !Config::isAccessSynchronizationEnabled()) {
+            return;
+        }
+
+        if (strtolower($piwikLogin) === 'anonymous') {
+            $this->logger->warning("UserSynchronizer::{func}: refusing to synchronize access for reserved 'anonymous' login (got '{login}').", array(
+                'func' => __FUNCTION__,
+                'login' => $piwikLogin,
+            ));
             return;
         }
 

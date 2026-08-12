@@ -9,10 +9,8 @@
 
 namespace Piwik\Plugins\TrackingSpamPrevention\tests\Integration;
 
-use Piwik\Config;
 use Piwik\Container\StaticContainer;
 use Piwik\Plugins\TrackingSpamPrevention\BlockedIpRanges;
-use Piwik\Plugins\TrackingSpamPrevention\Configuration;
 use Piwik\Plugins\TrackingSpamPrevention\SystemSettings;
 use Piwik\Tests\Framework\Fixture;
 use Piwik\Tests\Framework\TestCase\IntegrationTestCase;
@@ -172,9 +170,9 @@ class TrackingSpamPreventionTest extends IntegrationTestCase
 
     public function test_isExcludedVisit_whenWhiteListUsed()
     {
-        Config::getInstance()->TrackingSpamPrevention[Configuration::KEY_RANGE_ALLOW_LIST] = [
+        StaticContainer::get(SystemSettings::class)->ipAllowList->setValue([
             '10.10.0.4/32', '10.10.0.3/32',
-        ];
+        ]);
         $excluded = $this->makeExcluded('10.10.0.2');
         $this->assertTrue($excluded->isExcluded());
 
@@ -192,6 +190,29 @@ class TrackingSpamPreventionTest extends IntegrationTestCase
     {
         $excluded = $this->makeExcluded('20.20.20.20');
         $this->assertFalse($excluded->isExcluded());
+    }
+
+    public function test_isExcludedVisit_whenIpOnBlockList()
+    {
+        StaticContainer::get(SystemSettings::class)->ipBlockList->setValue([
+            '203.0.113.88/32', '198.51.100.0/24',
+        ]);
+
+        $this->assertTrue($this->makeExcluded('203.0.113.88')->isExcluded());
+        $this->assertTrue($this->makeExcluded('198.51.100.55')->isExcluded());
+
+        $this->assertFalse($this->makeExcluded('203.0.113.89')->isExcluded());
+        $this->assertFalse($this->makeExcluded('198.51.101.1')->isExcluded());
+    }
+
+    public function test_isExcludedVisit_allowListTakesPrecedenceOverBlockList()
+    {
+        $settings = StaticContainer::get(SystemSettings::class);
+        $settings->ipAllowList->setValue(['203.0.113.88/32']);
+        $settings->ipBlockList->setValue(['203.0.113.0/24']);
+
+        $this->assertFalse($this->makeExcluded('203.0.113.88')->isExcluded());
+        $this->assertTrue($this->makeExcluded('203.0.113.89')->isExcluded());
     }
 
     public function test_isExcludedVisit_excludeCountries()

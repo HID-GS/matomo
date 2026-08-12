@@ -10,7 +10,10 @@
 namespace Piwik\Plugins\LoginLdap;
 
 use Piwik\Common;
+use Piwik\Container\StaticContainer;
 use Piwik\Piwik;
+use Piwik\Plugins\Login\PasswordVerifier;
+use Piwik\Plugins\LoginLdap\Auth\WebServerAuth;
 use Piwik\Plugins\LoginLdap\LdapInterop\UserSynchronizer;
 use Piwik\Plugins\LoginLdap\Model\LdapUsers;
 use Exception;
@@ -57,6 +60,9 @@ class API extends \Piwik\Plugin\API
         Piwik::checkUserHasSuperUserAccess();
 
         $data = json_decode(Common::unsanitizeInputValue($data), true);
+        $this->confirmCurrentUserPassword(
+            $data['password_confirmation'] ?? null
+        );
 
         Config::savePluginOptions($data);
 
@@ -69,10 +75,14 @@ class API extends \Piwik\Plugin\API
      * @param string $data JSON-encoded LDAP server configuration entries.
      * @return array{result: string, message: string} The save status payload.
      */
-    public function saveServersInfo($data)
-    {
+    public function saveServersInfo(
+        $data,
+        #[\SensitiveParameter]
+        ?string $passwordConfirmation = null
+    ) {
         $this->checkHttpMethodIsPost();
         Piwik::checkUserHasSuperUserAccess();
+        $this->confirmCurrentUserPassword($passwordConfirmation);
 
         $servers = json_decode(Common::unsanitizeInputValue($data), true);
 
@@ -136,8 +146,11 @@ class API extends \Piwik\Plugin\API
             throw new Exception(Piwik::translate('LoginLdap_UserNotFound', $login));
         }
 
-        $this->userSynchronizer->synchronizeLdapUser($login, $ldapUser);
-        $this->userSynchronizer->synchronizePiwikAccessFromLdap($login, $ldapUser);
+        $synchronizedUser = $this->userSynchronizer->synchronizeLdapUser($login, $ldapUser);
+
+        $syncedLogin = !empty($synchronizedUser['login']) ? $synchronizedUser['login'] : $login;
+
+        $this->userSynchronizer->synchronizePiwikAccessFromLdap($syncedLogin, $ldapUser);
     }
 
     /**
@@ -158,6 +171,32 @@ class API extends \Piwik\Plugin\API
     {
         if ($_SERVER['REQUEST_METHOD'] != 'POST') {
             throw new Exception("Invalid HTTP method.");
+        }
+    }
+
+    protected function confirmCurrentUserPassword(
+        #[\SensitiveParameter]
+        $passwordConfirmation
+    ) {
+        if (WebServerAuth::isCurrentRequestWebServerAuthenticated()) {
+            return;
+        }
+
+        $loginCurrentUser = Piwik::getCurrentUserLogin();
+
+        if ($passwordConfirmation === null || $passwordConfirmation === '') {
+            throw new Exception(Piwik::translate('UsersManager_ConfirmWithReAuthentication'));
+        }
+
+        try {
+            $passwordCorrect = StaticContainer::get(PasswordVerifier::class)
+                ->isPasswordCorrect($loginCurrentUser, $passwordConfirmation);
+        } catch (Exception $e) {
+            throw new Exception(Piwik::translate('UsersManager_CurrentPasswordNotCorrect'));
+        }
+
+        if (!$passwordCorrect) {
+            throw new Exception(Piwik::translate('UsersManager_CurrentPasswordNotCorrect'));
         }
     }
 }

@@ -43,6 +43,16 @@ class SystemSettingsTest extends IntegrationTestCase
         $this->assertSame(false, $this->settings->block_clouds->getValue());
     }
 
+    public function test_block_cloud_hasSettingsIntroduction()
+    {
+        $field = $this->settings->block_clouds->configureField();
+
+        $this->assertSame(
+            'TrackingSpamPrevention_SettingsIntroduction',
+            $field->introduction
+        );
+    }
+
     public function test_block_cloud_enable_getOldValue()
     {
         $this->settings->block_clouds->setValue(1);
@@ -52,13 +62,13 @@ class SystemSettingsTest extends IntegrationTestCase
 
     public function test_block_headless_default()
     {
-        $this->assertSame(false, $this->settings->blockHeadless->getValue());
+        $this->assertSame(true, $this->settings->blockHeadless->getValue());
     }
 
-    public function test_block_Headless_enable()
+    public function test_block_Headless_disable()
     {
-        $this->settings->blockHeadless->setValue(1);
-        $this->assertSame(true, $this->settings->blockHeadless->getValue());
+        $this->settings->blockHeadless->setValue(0);
+        $this->assertSame(false, $this->settings->blockHeadless->getValue());
     }
 
     public function test_notification_email_default()
@@ -136,6 +146,91 @@ class SystemSettingsTest extends IntegrationTestCase
     public function test_include_getIncludedCountryCodes_default()
     {
         $this->assertSame([], $this->settings->getIncludedCountryCodes());
+    }
+
+    public function test_ipAllowList_default()
+    {
+        $this->assertSame([], $this->settings->ipAllowList->getValue());
+    }
+
+    public function test_getAllowedIpRanges_default()
+    {
+        $this->assertSame([], $this->settings->getAllowedIpRanges());
+    }
+
+    public function test_ipAllowList_transformTrimsFiltersAndDeduplicates()
+    {
+        $this->settings->ipAllowList->setValue([' 10.10.0.0/21 ', '', '10.10.0.0/21', '12.14.15.16', '  ', 'f::f']);
+        $this->assertSame(['10.10.0.0/21', '12.14.15.16', 'f::f'], $this->settings->ipAllowList->getValue());
+    }
+
+    public function test_ipAllowList_acceptsValidIpsRangesAndCidrNotations()
+    {
+        $ranges = ['10.10.0.1', '10.10.0.0/21', '10.10.*.*', 'f::f', '2001:db8::/64'];
+        $this->settings->ipAllowList->setValue($ranges);
+        $this->assertSame($ranges, $this->settings->ipAllowList->getValue());
+    }
+
+    public function test_ipAllowList_rejectsInvalidEntries()
+    {
+        $this->expectException(\Exception::class);
+        $this->settings->ipAllowList->setValue(['10.10.0.1', 'foobar']);
+    }
+
+    public function test_getAllowedIpRanges_returnsCleanedValues()
+    {
+        $this->settings->ipAllowList->setValue(['10.10.0.0/21', '12.14.15.16']);
+        $this->assertSame(['10.10.0.0/21', '12.14.15.16'], $this->settings->getAllowedIpRanges());
+    }
+
+    public function test_ipBlockList_default()
+    {
+        $this->assertSame([], $this->settings->ipBlockList->getValue());
+    }
+
+    public function test_getBlockListIpRanges_default()
+    {
+        $this->assertSame([], $this->settings->getBlockListIpRanges());
+    }
+
+    public function test_ipBlockList_transformTrimsFiltersAndDeduplicates()
+    {
+        $this->settings->ipBlockList->setValue([' 10.10.0.0/21 ', '', '10.10.0.0/21', '12.14.15.16', '  ', 'f::f']);
+        $this->assertSame(['10.10.0.0/21', '12.14.15.16', 'f::f'], $this->settings->ipBlockList->getValue());
+    }
+
+    public function test_ipBlockList_rejectsInvalidEntries()
+    {
+        $this->expectException(\Exception::class);
+        $this->settings->ipBlockList->setValue(['10.10.0.1', 'foobar']);
+    }
+
+    public function test_getBlockListIpRanges_returnsCleanedValues()
+    {
+        $this->settings->ipBlockList->setValue(['10.10.0.0/21', '12.14.15.16']);
+        $this->assertSame(['10.10.0.0/21', '12.14.15.16'], $this->settings->getBlockListIpRanges());
+    }
+
+    public function test_organisationBlockList_default()
+    {
+        $this->assertSame(Configuration::DEFAULT_GEOIP_MATCH_PROVIDERS, $this->settings->organisationBlockList->getValue());
+    }
+
+    public function test_getBlockedOrganisations_default()
+    {
+        $this->assertSame(Configuration::DEFAULT_GEOIP_MATCH_PROVIDERS, $this->settings->getBlockedOrganisations());
+    }
+
+    public function test_organisationBlockList_transformLowercasesTrimsFiltersAndDeduplicates()
+    {
+        $this->settings->organisationBlockList->setValue([' ExampleOrg ', '', 'exampleorg', 'Another Org', '  ']);
+        $this->assertSame(['exampleorg', 'another org'], $this->settings->organisationBlockList->getValue());
+    }
+
+    public function test_getBlockedOrganisations_returnsCleanedValues()
+    {
+        $this->settings->organisationBlockList->setValue(['ExampleOrg', 'Another Org']);
+        $this->assertSame(['exampleorg', 'another org'], $this->settings->getBlockedOrganisations());
     }
 
     public function test_save_shouldSyncWhenEnabled()
