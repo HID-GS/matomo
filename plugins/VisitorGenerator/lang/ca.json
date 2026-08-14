@@ -1,0 +1,25 @@
+{
+    "VisitorGenerator": {
+        "AreYouSure": "Generar visites falses?",
+        "AutomaticReprocess": "Es reprocessaran els informes de Matomo la propera vegada que els consulteu. Això pot trigar uns quants minuts.",
+        "ChoiceYes": "Si",
+        "CliToolUsage": "Mitjançant l'ús de l'eina %1$sMatomo CLI%2$s no només podeu generar encara més visites, sinó també usuaris, llocs web i objectius.",
+        "ConfirmVisitorGeneration": "Marqueu la casella per confirmar la generació de visitants",
+        "CustomMatomoUrl": "URL personalitzat de Matomo",
+        "DaysToCompute": "Dies per calcular",
+        "GenerateFakeActions": "Això generarà almenys %d accions falses en aquest lloc per cada dia.",
+        "GeneratedVisitsFor": "Visites generades per a %1$s i durant els darrers %2$s dies",
+        "LogImporterNote": "El %1$sREADME%2$s té informació sobre una eina més ràpida que importa gran quantitat de dades de prova a Matomo.",
+        "NbRequestsPerSec": "Sol·licituds per segon",
+        "NotReversible": "%1$s No %2$s serà possible esborrar aquestes visites de forma fàcil dels logs de Matomo.",
+        "NumberOfGeneratedActions": "Nombre d'accions generades",
+        "OverwriteLogFiles": "Sobreescriu els fitxers de registre \"matomo.php\" per generar visites falses en el format \"Registre combinat d'Apache\" (canviar o afegir fitxers a %s). Els desenvolupadors de connectors afegeixen els seus propis fitxers de registre com a fitxers \"*.log\" a una carpeta \"data\" del seu connector.",
+        "PleaseBePatient": "La generació de visites i accions pot trigar uns minuts.",
+        "PluginDescription": "Crea visites i accions falses a Matomo. Genera dades falses per omplir els informes de Matomo.",
+        "ReRunArchiveScript": "Si us plau, torneu a executar l'ordre crontab './console core:archive' per actualitzar els informes, segons %1$s\"Com configurar l'arxiu automàtic dels vostres informes\"%2$s",
+        "SelectWebsite": "Seleccioneu un lloc web",
+        "Submit": "Transmet",
+        "VisitorGenerator": "Generador de visites",
+        "Warning": "Esteu a punt de generar visites falses a la base de dades del Matomo."
+    }
+}

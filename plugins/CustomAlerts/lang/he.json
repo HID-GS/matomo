@@ -1,0 +1,7 @@
+{
+    "CustomAlerts": {
+        "AccessException": "אינך הבעלים של התראה עם מזהה %d",
+        "MediumEmail": "אימייל",
+        "MediumMobile": "נייד"
+    }
+}

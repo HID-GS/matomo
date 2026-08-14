@@ -1,0 +1,9 @@
+{
+    "SecurityInfo": {
+        "PluginDescription": "Tietoturvatietoja ja ehdotettuja parannuksia PHP-ympäristöösi. Tämä ei korvaa suojattuja kehityskäytäntöjä eikä koodin/sovelluksen auditointia. Perustuu PHP Security Consortiumin PhpSecInfo-tietokantaan.",
+        "Result": "Tulos",
+        "Security": "Turvallisuus",
+        "SecurityInformation": "PHP:n turvallisuustiedot",
+        "Test": "Testi"
+    }
+}

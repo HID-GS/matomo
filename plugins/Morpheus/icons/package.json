@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "browser-logos": "github:Findus23/browser-logos",
+    "flag-icons": "github:lipis/flag-icon-css"
+  }
+}

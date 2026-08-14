@@ -1,0 +1,14 @@
+{
+    "Bandwidth": {
+        "Bandwidth": "Gjerësi bande",
+        "ColumnAvgBandwidth": "Gjerësi Mesatare Bande",
+        "ColumnHitsWithBandwidth": "Vizita të regjistruara, me gjerësi bande",
+        "ColumnMaxBandwidth": "Gjerësi Maksimum Bande",
+        "ColumnMinBandwidth": "Gjerësi Minimum Bande",
+        "ColumnSumBandwidth": "Shumë Gjerësish Bande",
+        "ColumnTotalDownloadBandwidth": "Bajte të shpërngulur nga shkarkime",
+        "ColumnTotalOverallBandwidth": "Bajte të shpërngulur gjithsej",
+        "ColumnTotalPageviewBandwidth": "Bajte të shpërngulur nga parje faqesh",
+        "SparklineTotalBandwidthDetails": "%s bajte të shpërngulur gjithsej"
+    }
+}

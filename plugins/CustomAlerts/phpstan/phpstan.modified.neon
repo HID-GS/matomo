@@ -1,0 +1,6 @@
+includes:
+    - ../phpstan.neon
+parameters:
+    level: 5
+    tmpDir: /tmp/phpstan/CustomAlerts/modified
+    treatPhpDocTypesAsCertain: false
