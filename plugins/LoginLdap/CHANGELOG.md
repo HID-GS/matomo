@@ -1,5 +1,32 @@
 # LoginLdap Changelog
 
+#### LoginLdap 5.2.7 - 2026-09-14
+- Fixed the LDAP instance identifier comparison, so an access value naming a different Matomo instance is no longer applied to this one
+- Fixed the login comparison so that logins the database collation treats as equal, but which are different users, are no longer accepted
+- Added termination of a Matomo session when the web server starts authenticating a different user
+- Fixed the login result being built from the user's access as it was before LDAP access synchronization ran
+
+#### LoginLdap 5.2.6 - 2026-08-24
+- Added strict check for TLS if enabled
+- Added strict comparison of login username
+
+#### LoginLdap 5.2.5 - 2026-08-17
+- Added the stylesheets of the refreshed Matomo login layout, so the LDAP login page matches it
+- Added code to fix the missing translations in the login form validation messages
+
+#### LoginLdap 5.2.4 - 2026-08-10
+- Added code to change the logic for random password generation
+
+#### LoginLdap 5.2.3 - 2026-08-03
+* Enabled password confirmation by default on the LoginLdap settings page
+* Added code to synchronize LDAP users using the resolved Matomo login instead of the supplied identifier
+
+#### LoginLdap 5.2.2 - 2026-07-27
+* Added code to harden the check for anonymous user on sync
+
+#### LoginLdap 5.2.1 - 2026-07-20
+* Added code to disallow createAppSpecificTokenAuth endpoint for WebServerAuth
+
 #### LoginLdap 5.2.0 - 2026-06-22
 * Added code to enable password confirmation before any LDAP config save
 

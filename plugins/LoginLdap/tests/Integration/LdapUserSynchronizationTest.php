@@ -11,6 +11,7 @@
 namespace Piwik\Plugins\LoginLdap\tests\Integration;
 
 use Piwik\Access;
+use Piwik\AuthResult;
 use Piwik\Auth\Password;
 use Piwik\Config;
 use Piwik\Db;
@@ -170,7 +171,11 @@ class LdapUserSynchronizationTest extends LdapIntegrationTest
     {
         $this->enableAccessSynchronization();
 
-        $this->authenticateViaLdap(self::TEST_SUPERUSER_LOGIN, self::TEST_SUPERUSER_PASS);
+        $this->authenticateViaLdap(
+            self::TEST_SUPERUSER_LOGIN,
+            self::TEST_SUPERUSER_PASS,
+            AuthResult::SUCCESS_SUPERUSER_AUTH_CODE
+        );
 
         $superusers = $this->getSuperUsers();
         $this->assertEquals(array(self::TEST_SUPERUSER_LOGIN), $superusers);
@@ -227,7 +232,7 @@ class LdapUserSynchronizationTest extends LdapIntegrationTest
         Config::getInstance()->LoginLdap['instance_name'] = 'myPiwik';
         $this->enableAccessSynchronization();
 
-        $this->authenticateViaLdap('thor', 'bilgesnipe');
+        $this->authenticateViaLdap('thor', 'bilgesnipe', AuthResult::SUCCESS_SUPERUSER_AUTH_CODE);
 
         $superusers = $this->getSuperUsers();
         $this->assertEquals(array('thor'), $superusers);
@@ -256,7 +261,7 @@ class LdapUserSynchronizationTest extends LdapIntegrationTest
         $this->setPiwikInstanceUrl('http://localhost/');
         $this->enableAccessSynchronization();
 
-        $this->authenticateViaLdap('thor', 'bilgesnipe');
+        $this->authenticateViaLdap('thor', 'bilgesnipe', AuthResult::SUCCESS_SUPERUSER_AUTH_CODE);
 
         $superusers = $this->getSuperUsers();
         $this->assertEquals(array('thor'), $superusers);
@@ -264,20 +269,20 @@ class LdapUserSynchronizationTest extends LdapIntegrationTest
 
     public function test_RandomPasswordGenerated()
     {
-        $passwordManager = new Password();
-
         $this->authenticateViaLdap();
 
         $user = $this->getUser(self::TEST_LOGIN);
 
-        $this->assertTrue($passwordManager->verify(md5(self::TEST_PASS_LDAP), $user['password']));
+        $this->assertPasswordIsRandomPlaceholder($user['password']);
 
-        // test that password doesn't change after re-synchronizing
+        // the placeholder is regenerated when re-synchronizing. This does not invalidate existing
+        // sessions, since UserSynchronizer resets ts_password_modified afterwards.
         $this->authenticateViaLdap();
 
         $userAgain = $this->getUser(self::TEST_LOGIN);
 
-        $this->assertTrue($passwordManager->verify(md5(self::TEST_PASS_LDAP), $userAgain['password']));
+        $this->assertPasswordIsRandomPlaceholder($userAgain['password']);
+        $this->assertNotEquals($user['password'], $userAgain['password']);
     }
 
     public function test_CorrectExistingUserUpdated_WhenUserEmailSuffixUsed()
@@ -320,14 +325,23 @@ class LdapUserSynchronizationTest extends LdapIntegrationTest
         return $result;
     }
 
-    private function authenticateViaLdap($login = self::TEST_LOGIN, $pass = self::TEST_PASS)
-    {
+    /**
+     * @param string $login
+     * @param string $pass
+     * @param int $expectedCode the result code for the access synchronization leaves the user with, which is
+     *                          the superuser code when the LDAP entry grants superuser access
+     */
+    private function authenticateViaLdap(
+        $login = self::TEST_LOGIN,
+        $pass = self::TEST_PASS,
+        $expectedCode = AuthResult::SUCCESS
+    ) {
         $ldapAuth = LdapAuth::makeConfigured();
         $ldapAuth->setLogin($login);
         $ldapAuth->setPassword($pass);
         $authResult = $ldapAuth->authenticate();
 
-        $this->assertEquals(1, $authResult->getCode());
+        $this->assertEquals($expectedCode, $authResult->getCode());
 
         return $authResult;
     }

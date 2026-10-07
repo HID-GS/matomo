@@ -18,6 +18,7 @@ use Piwik\Option;
 use Piwik\Piwik;
 use Piwik\Plugin\Manager;
 use Piwik\Plugins\LoginLdap\Auth\Base as AuthBase;
+use Piwik\Plugins\LoginLdap\Auth\WebServerAuth;
 use Piwik\Plugins\LoginLdap\LdapInterop\UserMapper;
 use Piwik\Plugins\LoginLdap\LdapInterop\UserSynchronizer;
 use Piwik\View;
@@ -38,6 +39,7 @@ class LoginLdap extends \Piwik\Plugin
         $hooks = array(
             'Request.initAuthenticationObject'       => 'initAuthenticationObject',
             'API.Request.authenticate'               => 'apiRequestAuthenticate',
+            'API.Request.dispatch'                   => 'onApiRequestDispatch',
             'AssetManager.getJavaScriptFiles'        => 'getJsFiles',
             'AssetManager.getStylesheetFiles'        => 'getStylesheetFiles',
             'Translate.getClientSideTranslationKeys' => 'getClientSideTranslationKeys',
@@ -61,8 +63,24 @@ class LoginLdap extends \Piwik\Plugin
 
     public function getStylesheetFiles(&$stylesheetFiles)
     {
-        $stylesheetFiles[] = "plugins/Login/stylesheets/login.less";
-        $stylesheetFiles[] = "plugins/Login/stylesheets/variables.less";
+        // Registered here too, as the Login plugin may be deactivated. Only add the files that
+        // exist: older Matomo versions don't ship them all, and a missing one makes the asset
+        // manager throw.
+        $loginPluginDir = Manager::getPluginDirectory("Login");
+        $loginStylesheets = array(
+            "login.less",
+            "variables.less",
+            "loginLayout.less",
+            "loginForm.less",
+            "loginWhatsNew.less",
+        );
+
+        foreach ($loginStylesheets as $stylesheet) {
+            if (is_file("$loginPluginDir/stylesheets/$stylesheet")) {
+                $stylesheetFiles[] = "plugins/Login/stylesheets/$stylesheet";
+            }
+        }
+
         $stylesheetFiles[] = "plugins/LoginLdap/vue/src/Admin/Admin.less";
         $stylesheetFiles[] = "plugins/LoginLdap/vue/src/TestableField/TestableField.less";
     }
@@ -92,6 +110,7 @@ class LoginLdap extends \Piwik\Plugin
         $keys[] = 'LoginLdap_UserIdField';
         $keys[] = 'LoginLdap_UserIdFieldDescription';
         $keys[] = 'LoginLdap_PasswordField';
+        $keys[] = 'LoginLdap_PasswordFieldLegacy';
         $keys[] = 'LoginLdap_MailField';
         $keys[] = 'LoginLdap_MailFieldDescription';
         $keys[] = 'LoginLdap_UsernameSuffix';
@@ -138,6 +157,8 @@ class LoginLdap extends \Piwik\Plugin
         $keys[] = 'LoginLdap_MemberOfDescription2';
         $keys[] = 'LoginLdap_PasswordFieldDescription';
         $keys[] = 'LoginLdap_PasswordFieldDescription2';
+        $keys[] = 'LoginLdap_PasswordFieldLdapAuthDescription';
+        $keys[] = 'LoginLdap_PasswordFieldLdapAuthDescription2';
         $keys[] = 'LoginLdap_LoadUserCommandDesc';
         $keys[] = 'LoginLdap_ReadMoreAboutAccessSynchronization';
         $keys[] = 'LoginLdap_ThisMatomoInstanceNameDescription';
@@ -146,6 +167,11 @@ class LoginLdap extends \Piwik\Plugin
         $keys[] = 'LoginLdap_OptionsPWCONFIRMATIONDescription';
         $keys[] = 'General_Warning';
         $keys[] = 'LoginLdap_LoginPluginEnabledWarning';
+
+        // Used by the login form validation in Login's login.js, which is registered above.
+        $keys[] = 'Login_LoginOrEmail';
+        $keys[] = 'General_Password';
+        $keys[] = 'General_Required';
     }
 
     /**
@@ -231,6 +257,30 @@ class LoginLdap extends \Piwik\Plugin
         $auth = StaticContainer::get('Piwik\Auth');
         $auth->setLogin($login = null);
         $auth->setTokenAuth($tokenAuth);
+    }
+
+    /**
+     * Listens to API.Request.dispatch.
+     *
+     * When the request is authenticated by the web server (WebServerAuth with REMOTE_USER set),
+     * WebServerAuth::authenticate() ignores the supplied password and succeeds off REMOTE_USER.
+     * UsersManager.createAppSpecificTokenAuth uses password confirmation as its ONLY
+     * authorization gate (no Access check) and accepts an arbitrary target userLogin, so under
+     * web server auth it would mint a full token_auth for any account. Block it in that context.
+     * This mirrors the dispatch guard LoginSaml installs for the same method.
+     */
+    public function onApiRequestDispatch(&$parameters, $pluginName, $methodName)
+    {
+        if ($pluginName !== 'UsersManager' || $methodName !== 'createAppSpecificTokenAuth') {
+            return;
+        }
+
+        // Only a web-server-authenticated request bypasses the password. When the web server authenticated
+        // nobody, WebServerAuth delegates to its password-validating fallback, so token creation stays safe
+        // and must remain allowed.
+        if (WebServerAuth::isCurrentRequestWebServerAuthenticated()) {
+            throw new Exception(Piwik::translate('LoginLdap_CreateAppSpecificTokenAuthBlocked'));
+        }
     }
 
     private function isUserLdapUser($login)

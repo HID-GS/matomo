@@ -15,6 +15,7 @@ use Piwik\AuthResult;
 use Piwik\Config;
 use Piwik\Container\StaticContainer;
 use Piwik\Plugins\LoginLdap\Auth\LdapAuth;
+use Piwik\Plugins\LoginLdap\LdapInterop\UserMapper;
 use Piwik\Plugins\UsersManager\API as UsersManagerAPI;
 use Piwik\Tests\Framework\Fixture;
 
@@ -39,12 +40,12 @@ class AuthenticationTest extends LdapIntegrationTest
         $this->addNonLdapUsers();
         Fixture::createSuperUser();
 
-        $this->nonLdapUserAppPassword = UsersManagerAPI::getInstance()->createAppSpecificTokenAuth(
+        $this->nonLdapUserAppPassword = $this->createAppSpecificTokenAuthAsAnonymous(
             self::NON_LDAP_USER,
             self::NON_LDAP_PASS,
             'test'
         );
-        $this->nonLdapNormalUserAppPassword = UsersManagerAPI::getInstance()->createAppSpecificTokenAuth(
+        $this->nonLdapNormalUserAppPassword = $this->createAppSpecificTokenAuthAsAnonymous(
             self::NON_LDAP_NORMAL_USER,
             self::NON_LDAP_NORMAL_PASS,
             'test'
@@ -171,7 +172,7 @@ class AuthenticationTest extends LdapIntegrationTest
     {
         $this->test_LdapAuth_AuthenticatesUser_WithCorrectCredentials();
 
-        $testLoginTokenAuth = UsersManagerAPI::getInstance()->createAppSpecificTokenAuth(
+        $testLoginTokenAuth = $this->createAppSpecificTokenAuthAsAnonymous(
             self::TEST_LOGIN,
             self::TEST_PASS,
             'test'
@@ -229,6 +230,36 @@ class AuthenticationTest extends LdapIntegrationTest
         $authResult = $ldapAuth->authenticate();
 
         $this->assertEquals(0, $authResult->getCode());
+    }
+
+    public function test_LdapAuth_RotatesStoredPlaceholderAfterSuccessfulLogin_WhenSynchronizeUsersAfterLoginDisabled()
+    {
+        Config::getInstance()->LoginLdap['synchronize_users_after_login'] = 0;
+
+        UsersManagerAPI::getInstance()->addUser(
+            self::TEST_LOGIN,
+            'averywrongpassword',
+            'billionairephilanthropistplayboy@starkindustries.com'
+        );
+
+        $userMapper = new UserMapper();
+        $userMapper->markUserAsLdapUser(self::TEST_LOGIN);
+
+        $ldapAuth = LdapAuth::makeConfigured();
+        $ldapAuth->setLogin(self::TEST_LOGIN);
+        $ldapAuth->setPassword(self::TEST_PASS);
+        $authResult = $ldapAuth->authenticate();
+
+        $this->assertEquals(AuthResult::SUCCESS, $authResult->getCode());
+
+        $user = $this->getUser(self::TEST_LOGIN);
+        $this->assertPasswordIsRandomPlaceholder($user['password']);
+
+        $normalAuth = new \Piwik\Plugins\Login\Auth();
+        $normalAuth->setLogin(self::TEST_LOGIN);
+        $normalAuth->setPassword('averywrongpassword');
+
+        $this->assertEquals(AuthResult::FAILURE, $normalAuth->authenticate()->getCode());
     }
 
     private function getNonLdapUserTokenAuth()

@@ -17,6 +17,7 @@ use Piwik\Piwik;
 use Piwik\Plugins\LoginLdap\Config;
 use Piwik\Plugins\LoginLdap\LdapInterop\UserSynchronizer;
 use Piwik\Plugins\LoginLdap\Model\LdapUsers;
+use Piwik\Plugins\LoginLdap\UserIdentity;
 use Piwik\Plugins\UsersManager\API as UsersManagerAPI;
 use Piwik\Plugins\UsersManager\Model as UserModel;
 use Piwik\Log\LoggerInterface;
@@ -286,7 +287,27 @@ abstract class Base implements Auth
     {
         if (empty($this->userForLogin)) {
             if (!empty($this->login)) {
-                $this->userForLogin = $this->usersModel->getUser($this->login);
+                $user = $this->usersModel->getUser($this->login);
+
+                if (!empty($user) && !UserIdentity::isSameLogin($this->login, $user['login'])) {
+                    $this->logger->warning(
+                        "Auth\\Base::{func}: refusing to authenticate '{assertedLogin}': it resolves to the "
+                            . "existing Matomo user '{storedLogin}', which is a different login.",
+                        array(
+                            'func' => __FUNCTION__,
+                            'assertedLogin' => $this->login,
+                            'storedLogin' => $user['login'],
+                        )
+                    );
+
+                    throw new Exception(sprintf(
+                        "Refusing to authenticate: asserted login '%s' resolved to the different existing user '%s'.",
+                        $this->login,
+                        $user['login']
+                    ));
+                }
+
+                $this->userForLogin = $user;
             } elseif (!empty($this->token_auth)) {
                 $this->userForLogin = $this->usersModel->getUserByTokenAuth($this->token_auth);
             } else {
@@ -342,7 +363,14 @@ abstract class Base implements Auth
     protected function synchronizeLdapUser($ldapUser)
     {
         $this->userForLogin = $this->userSynchronizer->synchronizeLdapUser($this->login, $ldapUser);
-        $this->userSynchronizer->synchronizePiwikAccessFromLdap($this->login, $ldapUser);
+
+        $syncedLogin = !empty($this->userForLogin['login']) ? $this->userForLogin['login'] : $this->login;
+
+        $this->userSynchronizer->synchronizePiwikAccessFromLdap($syncedLogin, $ldapUser);
+
+        // read the row back: access synchronization has just applied the access LDAP grants now, which can
+        // differ from what the row held when it was returned above
+        $this->userForLogin = $this->usersModel->getUser($syncedLogin);
     }
 
     protected function makeSuccessLogin($userInfo)
@@ -358,7 +386,7 @@ abstract class Base implements Auth
 
     protected function makeAuthFailure()
     {
-        return new AuthResult(AuthResult::FAILURE, $this->login, null);
+        return new AuthResult(AuthResult::FAILURE, $this->login, '');
     }
 
     protected function authenticateByLdap()
